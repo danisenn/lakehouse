@@ -3,3 +3,4 @@ config/credentials.env
 config/credentials.json
 .venv
 .idea
+logs
