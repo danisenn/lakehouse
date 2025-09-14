@@ -1,6 +1,6 @@
 data
-config/credentials.env
-config/credentials.json
+.env
+credentials.json
 .venv
 .idea
 logs
