@@ -1,0 +1,1 @@
+# AI-Powered Assistance System for Semantic Data Integration in Lakehouse Architectures 
