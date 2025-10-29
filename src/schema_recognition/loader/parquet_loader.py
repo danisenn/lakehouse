@@ -1,5 +1,5 @@
 import pyarrow.parquet as pq
-from ...utils.logger import logger # Annahme: zentraler Logger
+from src.utils.logger import logger # Annahme: zentraler Logger
 
 def load_parquet_schema(file_path: str):
     """

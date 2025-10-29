@@ -36,7 +36,7 @@ def export_schema_table_samples(schema_name, output_dir):
 
 if __name__ == "__main__":
     schema = "lakehouse.datalake.raw"
-    output_directory = "src/connection/exported_files"
+    output_directory = "data/exported_files"
     os.makedirs(output_directory, exist_ok=True)
     logger.info("Start des Sample-Exports")
     export_schema_table_samples(schema, output_directory)
