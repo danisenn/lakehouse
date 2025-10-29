@@ -24,3 +24,6 @@ df.writeTo(iceberg_table).createOrReplace()
 print(f"✅ CSV converted to Iceberg table at '{iceberg_table}'")
 
 spark.stop()
+
+def test():
+    print('hello world')
