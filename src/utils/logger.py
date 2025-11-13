@@ -1,10 +1,11 @@
 import logging
 
-logger = logging.getLogger('lakehouse')
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-if not logger.hasHandlers():
-    logger.addHandler(handler)
+logger_name='lakehouse'
+logging.basicConfig(
+    filename=f"{logger_name}.log",
+    encoding="utf-8",
+    filemode="a",
+    format="{asctime} - {levelname} - {message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M",
+    )
