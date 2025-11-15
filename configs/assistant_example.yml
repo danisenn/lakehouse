@@ -1,0 +1,28 @@
+# Example configuration for the lakehouse assistant system
+# You can pass this file via:  scripts/lakehouse_assistant.py --config configs/assistant_example.yml
+
+# Where to scan for data files (CSV/Parquet); relative to project root
+root: data
+
+# Limit rows per file (0 = all)
+max_rows: 50000
+
+# Semantic field mapping
+reference_fields: [label, title, text]
+threshold: 0.7
+epsilon: 0.05
+# Optional synonyms dictionary file could be provided via CLI --synonyms-file
+
+# Anomaly detection settings
+use_zscore: true
+use_iqr: true
+use_isoforest: true
+z_threshold: 3.0
+contamination: 0.01
+n_estimators: 100
+random_state: 42
+
+# Outputs
+report: artifacts/assistant_report.json
+save_anomalies: artifacts/anomalies
+verbose: true

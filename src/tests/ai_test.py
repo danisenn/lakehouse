@@ -33,6 +33,8 @@ def infer_schema_with_ollama(model_name: str, csv_path: str, max_rows: int = 20)
         "  ]\n"
         "}\n\n"
         "Antworte **nur** mit JSON, keine Erklärungen oder Text davor oder danach.\n"
+        "Falls kein Schema erkennbar ist, weil z.B. kein Header enthalten ist, schreibe es in die Description"
+        "\n /bye"
     )
 
     try:

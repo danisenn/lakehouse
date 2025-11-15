@@ -1,3 +1,9 @@
 astronomer-cosmos==1.9.2
 dbt-core==1.9.3
 dbt-dremio==1.8.2
+# Runtime dependencies for assistant system and tests
+polars>=0.20
+numpy>=1.23
+scikit-learn>=1.2
+pytest>=7.0
+pyyaml>=6.0
