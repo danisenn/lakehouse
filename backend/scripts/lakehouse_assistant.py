@@ -181,7 +181,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         synonyms=synonyms,
         threshold=threshold,
         epsilon=epsilon,
-    ) 
+    )
     anomaly_cfg = AnomalyConfig(
         z_threshold=z_thr,
         use_iqr=use_iqr,

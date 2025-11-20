@@ -5,7 +5,7 @@
 This repository includes a unified assistant that evaluates datasets using:
 - anomaly_detection (Z-Score, IQR, Isolation Forest)
 - schema_recognition (infers column names and dtypes)
-- semantic_filed_mapping (maps dataset columns to your reference fields)
+- semantic_field_mapping (maps dataset columns to your reference fields)
 
 ### Quick start
 1) Install dependencies:
@@ -39,7 +39,7 @@ Key flags:
 
 ### Run tests
 - All tests: `python -m pytest -q`
-- Semantic mapping only: `python -m pytest -q src/tests/test_semantic_filed_mapping.py`
+- Semantic mapping only: `python -m pytest -q src/tests/test_semantic_field_mapping.py`
 
 ### Notes on Lakehouse connections
 A stub `LakehouseSQLDataSource` is provided under `src/assistant/datasource.py`. Implement your
