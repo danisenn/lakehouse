@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api, { type RunRequest } from '../services/api';
+import Logger from '../services/logger';
 
 export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report: any) => void }) {
     const [mode, setMode] = useState<'local' | 'single_table' | 'all_tables' | 'custom_query'>('local');
@@ -23,7 +24,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                         setSqlTable(data.tables[0]);
                     }
                 })
-                .catch(err => console.error('Failed to fetch tables:', err));
+                .catch(err => Logger.error('Failed to fetch tables:', err));
         }
     }, [mode, sqlSchema]);
 
@@ -72,11 +73,13 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
     const handleRun = async () => {
         setLoading(true);
+        Logger.info('Starting assistant run...', request);
         try {
             const report = await api.runAssistant(request, 'sync');
+            Logger.info('Run completed successfully', report);
             onRunComplete(report);
         } catch (error) {
-            console.error('Run failed:', error);
+            Logger.error('Run failed:', error);
             alert('Run failed. See console for details.');
         } finally {
             setLoading(false);

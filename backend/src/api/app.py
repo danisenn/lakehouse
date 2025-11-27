@@ -33,6 +33,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request Logging Middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    from src.utils.logger import logger
+    import time
+    
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000
+    
+    logger.info(f"{request.method} {request.url.path} - {response.status_code} - {process_time:.2f}ms")
+    return response
+
 
 @app.get("/api/v1/health")
 def health():
