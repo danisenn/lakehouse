@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://host:8000';
+// Resolve API base URL with sensible defaults:
+// 1) Use VITE_API_URL when provided.
+// 2) Otherwise, use same-origin relative paths (empty baseURL) so a dev proxy can handle /api.
+// 3) Avoid hard-coding an unknown host like "host" which can fail DNS resolution.
+const envBase = (import.meta as any).env?.VITE_API_URL as string | undefined;
+const API_BASE_URL = envBase && envBase.trim().length > 0
+    ? envBase.replace(/\/+$/g, '')
+    : '';
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -9,11 +16,21 @@ const apiClient = axios.create({
     },
 });
 
+export type LocalSource = {
+    type: 'local';
+    root: string;
+    max_rows?: number;
+};
+
+export type SQLSource = {
+    type: 'sql';
+    query?: string;
+    schema?: string;
+    max_rows?: number;
+};
+
 export interface RunRequest {
-    source: {
-        root?: string;
-        max_rows?: number;
-    };
+    source: LocalSource | SQLSource;
     mapping: {
         reference_fields: string[];
         synonyms?: Record<string, string[]>;
@@ -67,6 +84,11 @@ export const api = {
 
     listArtifacts: async (reportId: string) => {
         const response = await apiClient.get(`/api/v1/reports/${reportId}/artifacts`);
+        return response.data;
+    },
+
+    listTables: async (schema: string = 'lakehouse.datalake.raw') => {
+        const response = await apiClient.get(`/api/v1/tables`, { params: { schema } });
         return response.data;
     },
 };

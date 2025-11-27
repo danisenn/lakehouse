@@ -89,8 +89,9 @@ class LakehouseSQLDataSource(DataSource):
         name: str = "lakehouse_query"
     ) -> None:
         self.connection_uri = connection_uri
-        self.query = query
-        self.schema = schema
+        # Normalize empty strings to None for consistency with API/frontend
+        self.query = query if (query is not None and str(query).strip() != "") else None
+        self.schema = schema if (schema is not None and str(schema).strip() != "") else None
         self.max_rows = max_rows
         self.name = name
 
@@ -106,7 +107,16 @@ class LakehouseSQLDataSource(DataSource):
 
     def _iter_single_query(self) -> Iterator[Dataset]:
         try:
-            df = pl.read_database(query=self.query, connection=self.connection_uri)
+            q = self.query or ""
+            # Apply max_rows in query mode when not already limited
+            if self.max_rows and self.max_rows > 0:
+                lowered = q.lower()
+                if " limit " not in lowered and not lowered.rstrip().endswith(" limit"):
+                    q = f"{q.rstrip()} LIMIT {int(self.max_rows)}"
+            if hasattr(self.connection_uri, 'toPolars'):
+                df = self.connection_uri.toPolars(q)
+            else:
+                df = pl.read_database(query=q, connection=self.connection_uri)
             yield Dataset(name=self.name, path=None, df=df)
         except Exception as e:
             warn_df = pl.DataFrame({"_error": [str(e)]})

@@ -9,3 +9,5 @@ logging.basicConfig(
     style="{",
     datefmt="%Y-%m-%d %H:%M",
     )
+
+logger = logging.getLogger(logger_name)

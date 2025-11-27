@@ -119,3 +119,13 @@ def download_artifact(report_id: str, name: str):
     if not path:
         raise HTTPException(status_code=404, detail="Artifact not found")
     return FileResponse(path, media_type="text/csv", filename=path.name)
+
+
+@app.get("/api/v1/tables")
+def list_tables_endpoint(schema: str = "lakehouse.datalake.raw"):
+    from src.connection.data_export import list_tables
+    try:
+        tables = list_tables(schema)
+        return {"tables": tables}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list tables: {e}")
