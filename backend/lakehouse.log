@@ -3,3 +3,20 @@
 2025-11-27 11:45:34 - INFO - GET /doc - 404 - 0.50ms
 2025-11-27 11:45:34 - INFO - GET /favicon.ico - 404 - 0.34ms
 2025-11-27 11:59:12 - INFO - GET /api/v1/tables - 200 - 349.04ms
+2025-11-27 20:31:46 - INFO - GET /api/v1/tables - 200 - 462.30ms
+2025-11-27 20:31:51 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 640.02}
+2025-11-27 20:32:03 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1523.78}
+2025-11-27 20:32:13 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1354.85}
+2025-11-27 20:32:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1260.73}
+2025-11-27 20:32:41 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 288.7}
+2025-11-27 20:32:44 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 472.57}
+2025-11-27 20:32:48 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 310.75}
+2025-11-27 20:32:50 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 384.71}
+2025-11-27 20:34:57 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 405.08}
+2025-11-27 20:35:00 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 431.32}
+2025-11-27 20:35:03 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 392.93}
+2025-11-27 20:35:06 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 749.0}
+2025-11-27 20:35:09 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 508.57}
+2025-11-27 20:35:43 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1424.62}
+2025-11-27 20:36:25 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1249.89}
+2025-11-27 20:37:45 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1312.05}

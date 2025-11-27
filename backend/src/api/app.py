@@ -34,17 +34,42 @@ app.add_middleware(
 )
 
 # Request Logging Middleware
+# Request Logging Middleware
 @app.middleware("http")
 async def log_requests(request, call_next):
     from src.utils.logger import logger
     import time
     
     start_time = time.time()
-    response = await call_next(request)
-    process_time = (time.time() - start_time) * 1000
-    
-    logger.info(f"{request.method} {request.url.path} - {response.status_code} - {process_time:.2f}ms")
-    return response
+    try:
+        response = await call_next(request)
+        process_time = (time.time() - start_time) * 1000
+        
+        log_data = {
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "duration_ms": round(process_time, 2),
+        }
+        logger.info(f"Request processed: {log_data}")
+        return response
+    except Exception as e:
+        process_time = (time.time() - start_time) * 1000
+        logger.error(f"Request failed: {request.method} {request.url.path} - {str(e)} - {process_time:.2f}ms")
+        raise
+
+# Global Exception Handler
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    from src.utils.logger import logger
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)},
+    )
 
 
 @app.get("/api/v1/health")

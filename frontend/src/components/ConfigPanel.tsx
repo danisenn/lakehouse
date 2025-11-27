@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
+import { Settings, Database, FileText, Play, Terminal, Layers, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api, { type RunRequest } from '../services/api';
 import Logger from '../services/logger';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/Card';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Select } from './ui/Select';
+import { Badge } from './ui/Badge';
 
 export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report: any) => void }) {
     const [mode, setMode] = useState<'local' | 'single_table' | 'all_tables' | 'custom_query'>('local');
@@ -17,14 +24,19 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
     // Fetch tables when schema changes
     useEffect(() => {
         if (mode === 'single_table') {
+            const toastId = toast.loading('Fetching tables...', { id: 'fetch-tables' });
             api.listTables(sqlSchema)
                 .then(data => {
                     setAvailableTables(data.tables);
                     if (data.tables.length > 0 && !data.tables.includes(sqlTable)) {
                         setSqlTable(data.tables[0]);
                     }
+                    toast.success('Tables loaded', { id: toastId });
                 })
-                .catch(err => Logger.error('Failed to fetch tables:', err));
+                .catch(err => {
+                    Logger.error('Failed to fetch tables:', err);
+                    toast.error('Failed to fetch tables', { id: toastId });
+                });
         }
     }, [mode, sqlSchema]);
 
@@ -73,47 +85,60 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
     const handleRun = async () => {
         setLoading(true);
+        const toastId = toast.loading('Running assistant...');
         Logger.info('Starting assistant run...', request);
         try {
             const report = await api.runAssistant(request, 'sync');
             Logger.info('Run completed successfully', report);
             onRunComplete(report);
+            toast.success('Run completed successfully!', { id: toastId });
         } catch (error) {
             Logger.error('Run failed:', error);
-            alert('Run failed. See console for details.');
+            toast.error('Run failed. Check console for details.', { id: toastId });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Configuration</h2>
-
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium mb-2">Mode</label>
-                    <select
+        <Card className="h-full border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-blue-500" />
+                    Configuration
+                </CardTitle>
+                <CardDescription>
+                    Configure the data source and analysis parameters.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                        <Database className="h-4 w-4 text-gray-500" />
+                        Source Mode
+                    </label>
+                    <Select
                         value={mode}
                         onChange={(e) => setMode(e.target.value as any)}
-                        className="w-full p-2 bg-gray-700 rounded"
                     >
                         <option value="local">Local Files</option>
                         <option value="single_table">SQL: Single Table</option>
                         <option value="all_tables">SQL: All Tables in Schema</option>
                         <option value="custom_query">SQL: Custom Query</option>
-                    </select>
+                    </Select>
                 </div>
 
                 {/* Schema Input - Shared by Single Table and All Tables */}
                 {(mode === 'single_table' || mode === 'all_tables') && (
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Schema Name</label>
-                        <input
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <Layers className="h-4 w-4 text-gray-500" />
+                            Schema Name
+                        </label>
+                        <Input
                             type="text"
                             value={sqlSchema}
                             onChange={(e) => setSqlSchema(e.target.value)}
-                            className="w-full p-2 bg-gray-700 rounded"
                             placeholder='lakehouse.datalake.raw'
                         />
                     </div>
@@ -121,24 +146,25 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
                 {/* Table Input - Only for Single Table */}
                 {mode === 'single_table' && (
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Table Name</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-gray-500" />
+                            Table Name
+                        </label>
                         {availableTables.length > 0 ? (
-                            <select
+                            <Select
                                 value={sqlTable}
                                 onChange={(e) => setSqlTable(e.target.value)}
-                                className="w-full p-2 bg-gray-700 rounded"
                             >
                                 {availableTables.map(t => (
                                     <option key={t} value={t}>{t}</option>
                                 ))}
-                            </select>
+                            </Select>
                         ) : (
-                            <input
+                            <Input
                                 type="text"
                                 value={sqlTable}
                                 onChange={(e) => setSqlTable(e.target.value)}
-                                className="w-full p-2 bg-gray-700 rounded"
                                 placeholder="SF_incidents2016.json"
                             />
                         )}
@@ -147,30 +173,39 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
                 {/* Custom Query Input */}
                 {mode === 'custom_query' && (
-                    <div>
-                        <label className="block text-sm font-medium mb-2">SQL Query</label>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <Terminal className="h-4 w-4 text-gray-500" />
+                            SQL Query
+                        </label>
                         <textarea
                             value={customQuery}
                             onChange={(e) => setCustomQuery(e.target.value)}
-                            className="w-full p-2 bg-gray-700 rounded h-24 font-mono text-sm"
+                            className="w-full p-3 bg-gray-950 border border-gray-800 rounded-md h-32 font-mono text-xs text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none"
                             placeholder="SELECT * FROM table LIMIT 10"
                         />
                     </div>
                 )}
 
-                <div>
-                    <label className="block text-sm font-medium mb-2">Reference Fields</label>
-                    <input
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-gray-500" />
+                        Reference Fields
+                    </label>
+                    <Input
                         type="text"
                         value={refFields}
                         onChange={(e) => setRefFields(e.target.value)}
                         placeholder="label,title,text"
-                        className="w-full p-2 bg-gray-700 rounded"
                     />
+                    <p className="text-xs text-gray-500">Comma-separated list of fields to map against.</p>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium mb-2">Threshold: {threshold}</label>
+                <div className="space-y-4 pt-2">
+                    <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-gray-300">Similarity Threshold</label>
+                        <Badge variant="outline" className="font-mono">{threshold.toFixed(2)}</Badge>
+                    </div>
                     <input
                         type="range"
                         min="0"
@@ -178,25 +213,41 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                         step="0.01"
                         value={threshold}
                         onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                        className="w-full"
+                        className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                     />
                 </div>
-
-                <div className="mt-4">
-                    <label className="block text-sm font-medium mb-2">Request Preview</label>
-                    <pre className="bg-gray-900 p-4 rounded overflow-auto text-xs font-mono text-green-400 max-h-64">
-                        {JSON.stringify(request, null, 2)}
-                    </pre>
-                </div>
-
-                <button
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+                <Button
                     onClick={handleRun}
                     disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 py-2 px-4 rounded font-semibold"
+                    className="w-full h-12 text-lg shadow-blue-900/20 shadow-lg"
                 >
-                    {loading ? 'Running...' : 'Run Assistant'}
-                </button>
-            </div>
-        </div>
+                    {loading ? (
+                        <>
+                            <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                            Running Analysis...
+                        </>
+                    ) : (
+                        <>
+                            <Play className="h-5 w-5 mr-2 fill-current" />
+                            Run Assistant
+                        </>
+                    )}
+                </Button>
+
+                <div className="w-full">
+                    <details className="text-xs text-gray-500 cursor-pointer group">
+                        <summary className="hover:text-gray-400 transition-colors list-none flex items-center gap-1">
+                            <span className="group-open:rotate-90 transition-transform">▶</span>
+                            Debug Request Payload
+                        </summary>
+                        <pre className="mt-2 p-3 bg-gray-950 rounded border border-gray-800 overflow-auto font-mono text-xs text-green-500 max-h-40">
+                            {JSON.stringify(request, null, 2)}
+                        </pre>
+                    </details>
+                </div>
+            </CardFooter>
+        </Card>
     );
 }
