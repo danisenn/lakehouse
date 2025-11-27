@@ -1,1 +1,5 @@
 2025-11-27 11:15:32 - INFO - POST /api/v1/run - 200 - 1500.62ms
+2025-11-27 11:42:11 - INFO - POST /api/v1/run - 200 - 1384.77ms
+2025-11-27 11:45:34 - INFO - GET /doc - 404 - 0.50ms
+2025-11-27 11:45:34 - INFO - GET /favicon.ico - 404 - 0.34ms
+2025-11-27 11:59:12 - INFO - GET /api/v1/tables - 200 - 349.04ms

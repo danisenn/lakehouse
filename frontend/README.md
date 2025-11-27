@@ -1,31 +1,19 @@
-# Lakehouse Frontend
+# Lakehouse Assistant Frontend
 
-React + TypeScript frontend for the Lakehouse Assistant.
+## Prerequisites
+- Node.js (v18+ recommended)
+- npm
 
-## Development
+## Installation
 
 ```bash
-# Install dependencies
 npm install
-
-# Start dev server
-npm run dev
-
-# Build for production
-npm run build
 ```
 
-## Configuration
-
-Create a `.env` file:
+## Running the Server
 
 ```bash
-VITE_API_URL=http://localhost:8000
+npm run dev
 ```
 
-## Features
-
-- Run assistant with local files or SQL queries
-- Configure semantic mapping and anomaly detection
-- View real-time results
-- Modern, responsive UI with Tailwind CSS
+The server will start at `http://localhost:5173` (by default).
