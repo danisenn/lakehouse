@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Annotated, Dict, List, Optional, Sequence, Literal, Union
+from typing import Annotated, Dict, List, Optional, Sequence, Literal, Union, Any
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +8,23 @@ class MappingConfigModel(BaseModel):
     synonyms: Optional[Dict[str, List[str]]] = None
     threshold: Annotated[float, Field(ge=0.0, le=1.0)] = 0.7
     epsilon: Annotated[float, Field(ge=0.0, le=1.0)] = 0.05
+
+class DatasetReport(BaseModel):
+    name: str
+    path: Optional[str]
+    rows: int
+    cols: int
+    schema: Dict[str, str]
+    semantic_types: Dict[str, str]
+    statistics: Dict[str, Any]
+    nested_structures: List[str]
+    categorical_cols: List[str]
+    llm_insights: Dict[str, Any]
+    mapping: Dict
+    ambiguous: List[str]
+    unmapped: List[str]
+    anomalies: Dict[str, int]
+    anomaly_samples_saved: Dict[str, Optional[str]]
 
 
 class AnomalyConfigModel(BaseModel):

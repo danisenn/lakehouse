@@ -25,6 +25,8 @@ venv.bak/
 
 .idea
 logs
+*.log
+lakehouse.log
 
 # Data Formats etc
 *.csv

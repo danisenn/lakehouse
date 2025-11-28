@@ -1,0 +1,90 @@
+{
+    "email": [
+        "mail",
+        "e-mail",
+        "contact_email",
+        "email_address",
+        "user_email"
+    ],
+    "phone": [
+        "tel",
+        "telephone",
+        "mobile",
+        "cell",
+        "contact_number",
+        "phone_number",
+        "phonenumber"
+    ],
+    "address": [
+        "addr",
+        "location",
+        "residence",
+        "street",
+        "street_address",
+        "postal_address"
+    ],
+    "city": [
+        "town",
+        "municipality"
+    ],
+    "state": [
+        "province",
+        "region",
+        "territory"
+    ],
+    "zip": [
+        "zipcode",
+        "zip_code",
+        "postal_code",
+        "postcode"
+    ],
+    "country": [
+        "nation",
+        "land"
+    ],
+    "id": [
+        "identifier",
+        "uuid",
+        "pk",
+        "key",
+        "record_id",
+        "user_id",
+        "customer_id"
+    ],
+    "name": [
+        "fullname",
+        "full_name",
+        "display_name"
+    ],
+    "first_name": [
+        "fname",
+        "given_name"
+    ],
+    "last_name": [
+        "lname",
+        "surname",
+        "family_name"
+    ],
+    "gender": [
+        "sex"
+    ],
+    "dob": [
+        "date_of_birth",
+        "birth_date",
+        "birthday"
+    ],
+    "price": [
+        "cost",
+        "amount",
+        "value",
+        "rate",
+        "fee",
+        "charge"
+    ],
+    "date": [
+        "timestamp",
+        "created_at",
+        "updated_at",
+        "datetime"
+    ]
+}

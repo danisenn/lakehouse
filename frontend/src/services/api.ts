@@ -54,6 +54,21 @@ export interface DatasetReport {
     rows: number;
     cols: number;
     schema: Record<string, string>;
+    semantic_types: Record<string, string>;
+    statistics: {
+        missing_ratios: Record<string, number>;
+        numeric_stats?: Record<string, { mean: number; min: number; max: number; std: number; zeros: number }>;
+        text_stats?: Record<string, { unique_count: number; top_values: Array<{ value: string; count: number }> }>;
+        row_count: number;
+        col_count: number;
+    };
+    nested_structures: string[];
+    categorical_cols: string[];
+    llm_insights: {
+        descriptions: Record<string, string>;
+        summary: string | null;
+        anomaly_explanation: string | null;
+    };
     mapping: Record<string, any>;
     ambiguous: string[];
     unmapped: string[];
