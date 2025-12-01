@@ -13,7 +13,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "8010:8010"
     environment:
       - CORS_ORIGINS=http://localhost,http://localhost:80
       - ARTIFACT_DIR=/app/artifacts
@@ -33,7 +33,7 @@ services:
     ports:
       - "80:80"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8010
     depends_on:
       - backend
     restart: always
