@@ -2,30 +2,45 @@ import os
 from src.connection.connection import get_connection
 from src.utils.logger import logger
 import polars as pl
+import adbc_driver_flightsql.dbapi as flight_sql
+
+def _get_dbapi_connection():
+    """Create a DBAPI connection using credentials from get_connection()."""
+    conn_dict = get_connection()
+    uri = conn_dict.get('uri')
+    username = conn_dict.get('username')
+    password = conn_dict.get('password')
+    
+    # Connect using DBAPI
+    # This handles grpc:// (plaintext) and grpc+tls:// (TLS) correctly
+    return flight_sql.connect(uri, db_kwargs={
+        "username": username,
+        "password": password,
+    })
+
 
 def list_tables(space_path="lakehouse.datalake.raw"):
     """Return a list of all table names in the given schema."""
-    conn = get_connection()
     query = f'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA = \'{space_path}\''
     try:
-        tables = conn.toPolars(query)
-        return tables["TABLE_NAME"].to_list()
+        with _get_dbapi_connection() as conn:
+            tables = pl.read_database(query=query, connection=conn)
+            return tables["TABLE_NAME"].to_list()
     except Exception as e:
         logger.error(f"Fehler beim Abrufen der Tabellen im Schema {space_path}: {e}")
         return []
 
-SAMPLE_SIZE =20  # Anzahl der Zeilen im Sample
+SAMPLE_SIZE = 20  # Anzahl der Zeilen im Sample
 
 def export_table_sample_to_csv(schema_name, table_name, output_dir):
-    conn = get_connection()
     query = f'SELECT * FROM {schema_name}."{table_name}" LIMIT {SAMPLE_SIZE}'
     try:
-        result = conn.toPolars(query)
-        df = pl.from_pandas(result.to_pandas())
-        base_name = os.path.splitext(table_name)[0]
-        output_path = os.path.join(output_dir, f"{base_name}.csv")
-        df.write_csv(output_path)
-        logger.info(f"Sample von Tabelle {table_name} exportiert nach {output_path}")
+        with _get_dbapi_connection() as conn:
+            df = pl.read_database(query=query, connection=conn)
+            base_name = os.path.splitext(table_name)[0]
+            output_path = os.path.join(output_dir, f"{base_name}.csv")
+            df.write_csv(output_path)
+            logger.info(f"Sample von Tabelle {table_name} exportiert nach {output_path}")
     except Exception as e:
         logger.error(f"Fehler beim Export von Sample der Tabelle {table_name}: {e}")
 

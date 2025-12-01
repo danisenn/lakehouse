@@ -12,4 +12,6 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 pydantic>=2.6
 pydantic-settings>=2.2
-connectorx>=0.3.2
+adbc-driver-flightsql>=0.8.0
+pyarrow>=14.0
+python-dotenv>=1.0

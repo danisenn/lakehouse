@@ -74,7 +74,7 @@ class LocalFilesDataSource(DataSource):
 
 class LakehouseSQLDataSource(DataSource):
     """
-    SQL-based lakehouse data source using connectorx.
+    SQL-based lakehouse data source using ADBC Flight SQL.
     Supports two modes:
     - query mode: execute a single query
     - schema mode: discover and iterate over all tables in a schema
@@ -82,7 +82,7 @@ class LakehouseSQLDataSource(DataSource):
 
     def __init__(
         self, 
-        connection_uri: str | object, 
+        connection_uri: str | dict, 
         query: str | None = None,
         schema: str | None = None,
         max_rows: int | None = None,
@@ -94,6 +94,28 @@ class LakehouseSQLDataSource(DataSource):
         self.schema = schema if (schema is not None and str(schema).strip() != "") else None
         self.max_rows = max_rows
         self.name = name
+
+    def _execute_query(self, query: str) -> pl.DataFrame:
+        """Execute a query using ADBC Flight SQL connection."""
+        import adbc_driver_flightsql.dbapi as flight_sql
+        
+        if isinstance(self.connection_uri, dict):
+            uri = self.connection_uri['uri']
+            username = self.connection_uri['username']
+            password = self.connection_uri['password']
+            
+            # Connect using DBAPI
+            # This handles grpc:// (plaintext) and grpc+tls:// (TLS) correctly
+            with flight_sql.connect(uri, db_kwargs={
+                "username": username,
+                "password": password,
+            }) as conn:
+                return pl.read_database(query=query, connection=conn)
+        else:
+            # Fallback for string URI (legacy support)
+            # Try to parse it or just use it if it's a full ADBC URI
+            # But likely this path is not used or will fail if it's the old format
+            return pl.read_database_uri(query=query, uri=self.connection_uri, engine="adbc")
 
     def iter_datasets(self) -> Iterator[Dataset]:
         if self.schema:
@@ -113,10 +135,7 @@ class LakehouseSQLDataSource(DataSource):
                 lowered = q.lower()
                 if " limit " not in lowered and not lowered.rstrip().endswith(" limit"):
                     q = f"{q.rstrip()} LIMIT {int(self.max_rows)}"
-            if hasattr(self.connection_uri, 'toPolars'):
-                df = self.connection_uri.toPolars(q)
-            else:
-                df = pl.read_database(query=q, connection=self.connection_uri)
+            df = self._execute_query(q)
             yield Dataset(name=self.name, path=None, df=df)
         except Exception as e:
             warn_df = pl.DataFrame({"_error": [str(e)]})
@@ -127,13 +146,7 @@ class LakehouseSQLDataSource(DataSource):
         discovery_query = f'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_SCHEMA = \'{self.schema}\''
         
         try:
-            # Check if connection_uri is a Dremio connection object
-            if hasattr(self.connection_uri, 'toPolars'):
-                # Dremio connection
-                tables_df = self.connection_uri.toPolars(discovery_query)
-            else:
-                # Standard connectorx
-                tables_df = pl.read_database(query=discovery_query, connection=self.connection_uri)
+            tables_df = self._execute_query(discovery_query)
             
             table_names = tables_df["TABLE_NAME"].to_list()
             
@@ -149,10 +162,7 @@ class LakehouseSQLDataSource(DataSource):
         query = f'SELECT * FROM {self.schema}."{table_name}"{limit_clause}'
         
         try:
-            if hasattr(self.connection_uri, 'toPolars'):
-                df = self.connection_uri.toPolars(query)
-            else:
-                df = pl.read_database(query=query, connection=self.connection_uri)
+            df = self._execute_query(query)
             
             yield Dataset(name=f"{self.schema}.{table_name}", path=None, df=df)
         except Exception as e:

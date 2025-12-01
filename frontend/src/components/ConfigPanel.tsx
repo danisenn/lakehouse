@@ -20,7 +20,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
     const [sqlTable, setSqlTable] = useState('SF_incidents2016.json');
     const [customQuery, setCustomQuery] = useState('SELECT * FROM "Samples"."samples.dremio.com"."SF_incidents2016.json" LIMIT 10');
     const [availableTables, setAvailableTables] = useState<string[]>([]);
-
+    
     // Fetch tables when schema changes
     useEffect(() => {
         if (mode === 'single_table') {
@@ -39,7 +39,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                 });
         }
     }, [mode, sqlSchema]);
-
+    
     // Construct the request based on the selected mode
     let source: RunRequest['source'];
     if (mode === 'local') {

@@ -1,0 +1,42 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: >
+      "ollama serve & pid=$!; sleep 5; ollama pull llama3.2:1b; wait $pid"
+    restart: always
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - CORS_ORIGINS=http://localhost,http://localhost:80
+      - ARTIFACT_DIR=/app/artifacts
+      - OLLAMA_HOST=http://ollama:11434
+    env_file:
+      - .env
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/lakehouse.log:/app/lakehouse.log
+      - ./data:/app/data
+    depends_on:
+      - ollama
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  ollama_data:

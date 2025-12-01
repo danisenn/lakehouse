@@ -1,12 +1,16 @@
 import requests
 import json
+import os
 from typing import List, Dict, Optional, Any
 
 class LLMClient:
     """
     Client for interacting with a local Ollama instance.
     """
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "llama3"):
+    def __init__(self, base_url: str = None, model: str = "llama3.2:1b"):
+        # Read from environment if not provided
+        if base_url is None:
+            base_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         self.base_url = base_url
         self.model = model
 

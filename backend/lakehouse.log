@@ -55,3 +55,185 @@
 2025-11-28 14:03:36 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 336.01}
 2025-11-28 14:04:22 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 41423.2}
 2025-11-28 14:05:14 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 21045.58}
+2025-11-29 11:27:50 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 117966.2}
+2025-11-29 10:55:20 - INFO - Request processed: {'method': 'GET', 'path': '/', 'status_code': 404, 'duration_ms': 3.5}
+2025-11-29 10:55:20 - INFO - Request processed: {'method': 'GET', 'path': '/favicon.ico', 'status_code': 404, 'duration_ms': 0.84}
+2025-11-29 10:55:21 - INFO - Request processed: {'method': 'GET', 'path': '/', 'status_code': 404, 'duration_ms': 0.62}
+2025-11-29 11:00:38 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 9.09}
+2025-11-29 11:02:23 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 910.45}
+2025-11-29 11:02:36 - ERROR - Run failed: No module named 'dremio_simple_query'
+Traceback (most recent call last):
+  File "/app/src/api/app.py", line 106, in start_run
+    report = run_sync(
+             ^^^^^^^^^
+  File "/app/src/api/services.py", line 49, in run_sync
+    from src.connection.connection import get_connection
+  File "/app/src/connection/connection.py", line 3, in <module>
+    from dremio_simple_query.connect import get_token, DremioConnection
+ModuleNotFoundError: No module named 'dremio_simple_query'
+2025-11-29 11:02:36 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 27.29}
+2025-11-29 11:02:37 - ERROR - Run failed: No module named 'dremio_simple_query'
+Traceback (most recent call last):
+  File "/app/src/api/app.py", line 106, in start_run
+    report = run_sync(
+             ^^^^^^^^^
+  File "/app/src/api/services.py", line 49, in run_sync
+    from src.connection.connection import get_connection
+  File "/app/src/connection/connection.py", line 3, in <module>
+    from dremio_simple_query.connect import get_token, DremioConnection
+ModuleNotFoundError: No module named 'dremio_simple_query'
+2025-11-29 11:02:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 4.24}
+2025-11-29 11:02:37 - ERROR - Run failed: No module named 'dremio_simple_query'
+Traceback (most recent call last):
+  File "/app/src/api/app.py", line 106, in start_run
+    report = run_sync(
+             ^^^^^^^^^
+  File "/app/src/api/services.py", line 49, in run_sync
+    from src.connection.connection import get_connection
+  File "/app/src/connection/connection.py", line 3, in <module>
+    from dremio_simple_query.connect import get_token, DremioConnection
+ModuleNotFoundError: No module named 'dremio_simple_query'
+2025-11-29 11:02:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 5.96}
+2025-11-29 11:02:37 - ERROR - Run failed: No module named 'dremio_simple_query'
+Traceback (most recent call last):
+  File "/app/src/api/app.py", line 106, in start_run
+    report = run_sync(
+             ^^^^^^^^^
+  File "/app/src/api/services.py", line 49, in run_sync
+    from src.connection.connection import get_connection
+  File "/app/src/connection/connection.py", line 3, in <module>
+    from dremio_simple_query.connect import get_token, DremioConnection
+ModuleNotFoundError: No module named 'dremio_simple_query'
+2025-11-29 11:02:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 3.44}
+2025-11-29 11:02:38 - ERROR - Run failed: No module named 'dremio_simple_query'
+Traceback (most recent call last):
+  File "/app/src/api/app.py", line 106, in start_run
+    report = run_sync(
+             ^^^^^^^^^
+  File "/app/src/api/services.py", line 49, in run_sync
+    from src.connection.connection import get_connection
+  File "/app/src/connection/connection.py", line 3, in <module>
+    from dremio_simple_query.connect import get_token, DremioConnection
+ModuleNotFoundError: No module named 'dremio_simple_query'
+2025-11-29 11:02:38 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 500, 'duration_ms': 2.26}
+2025-11-29 11:03:03 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 12.58}
+2025-11-29 11:04:14 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 880.38}
+2025-11-29 11:05:42 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 962.54}
+2025-11-29 11:06:31 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 44.99}
+2025-11-29 11:07:03 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 23.45}
+2025-11-29 11:07:04 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 9.39}
+2025-11-29 11:07:05 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 9.38}
+2025-11-29 11:08:56 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: 'str' object has no attribute 'toPolars'
+2025-11-29 11:08:56 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 17.29}
+2025-11-29 11:09:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 27.02}
+2025-11-29 11:10:38 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 33.09}
+2025-11-29 11:10:58 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: 'str' object has no attribute 'toPolars'
+2025-11-29 11:10:58 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 6.15}
+2025-11-29 11:13:13 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: string URI is invalid here; call `read_database_uri` instead
+2025-11-29 11:13:13 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 10.24}
+2025-11-29 11:13:28 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 24.75}
+2025-11-29 11:13:42 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 23.16}
+2025-11-29 11:13:43 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 9.6}
+2025-11-29 11:13:55 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: string URI is invalid here; call `read_database_uri` instead
+2025-11-29 11:13:55 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 15.56}
+2025-11-29 11:14:48 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: You need to install the 'pyarrow' module first before trying to import it
+2025-11-29 11:14:48 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 22.17}
+2025-11-29 11:14:58 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 45.53}
+2025-11-29 14:38:42 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: You need to install the 'pyarrow' module first before trying to import it
+2025-11-29 14:38:42 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 54.85}
+2025-11-29 14:56:42 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: expected connection to be a URI string; found 'dict'
+2025-11-29 14:56:42 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 17.91}
+2025-11-29 15:01:59 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: expected connection to be a URI string; found 'dict'
+2025-11-29 15:01:59 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 13.97}
+2025-11-29 15:02:28 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: expected connection to be a URI string; found 'dict'
+2025-11-29 15:02:28 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 3.3}
+2025-11-29 15:02:30 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 47.0}
+2025-11-29 15:05:51 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: expected connection to be a URI string; found 'dict'
+2025-11-29 15:05:51 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 9.43}
+2025-11-29 15:06:12 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: expected connection to be a URI string; found 'dict'
+2025-11-29 15:06:12 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 2.18}
+2025-11-29 15:08:15 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 29.68}
+2025-11-29 15:08:17 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 18.32}
+2025-11-29 15:08:20 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 8.82}
+2025-11-29 16:20:26 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-29 16:20:26 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 16.91}
+2025-11-29 16:20:52 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-29 16:20:52 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 11.5}
+2025-11-29 16:36:10 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-29 16:36:10 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 9.66}
+2025-11-29 16:36:27 - INFO - Request processed: {'method': 'GET', 'path': '/docs', 'status_code': 200, 'duration_ms': 0.46}
+2025-11-29 16:36:27 - INFO - Request processed: {'method': 'GET', 'path': '/openapi.json', 'status_code': 200, 'duration_ms': 14.12}
+2025-11-29 16:36:49 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/health', 'status_code': 200, 'duration_ms': 0.68}
+2025-11-29 16:36:51 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/health', 'status_code': 200, 'duration_ms': 1.1}
+2025-11-29 16:36:55 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/health', 'status_code': 200, 'duration_ms': 6.53}
+2025-11-29 16:37:07 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-29 16:37:07 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 4.29}
+2025-11-29 16:37:14 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-29 16:37:14 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 2.41}
+2025-11-30 09:54:16 - INFO - Request processed: {'method': 'GET', 'path': '/docs', 'status_code': 200, 'duration_ms': 0.54}
+2025-11-30 09:54:16 - INFO - Request processed: {'method': 'GET', 'path': '/openapi.json', 'status_code': 200, 'duration_ms': 16.75}
+2025-11-30 09:54:26 - INFO - Request processed: {'method': 'GET', 'path': '/', 'status_code': 404, 'duration_ms': 0.64}
+2025-11-30 09:54:32 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 09:54:32 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 14.6}
+2025-11-30 09:56:13 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 09:56:13 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 10.09}
+2025-11-30 10:38:29 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 10:38:29 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 9.6}
+2025-11-30 10:53:15 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 10:53:15 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 9.94}
+2025-11-30 10:53:19 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 58.66}
+2025-11-30 10:54:12 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 10:54:12 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 10.19}
+2025-11-30 10:58:59 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 10:58:59 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 10.43}
+2025-11-30 11:01:34 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 11:01:34 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 9.89}
+2025-11-30 11:09:18 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 11:09:18 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 8.24}
+2025-11-30 11:10:08 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: ADBC 'adbc_driver_adbc+flightsql' driver not detected.
+If ADBC supports this database, please run: pip install adbc-driver-adbc+flightsql
+2025-11-30 11:10:08 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 2.55}
+2025-11-30 11:10:26 - ERROR - Fehler beim Abrufen der Tabellen im Schema lakehouse.datalake.raw: IO: [FlightSQL] connection error: desc = "transport: Error while dialing: dial tcp [fdc4:f303:9324::254]:32010: connect: network is unreachable" (Unavailable; AuthenticateBasicToken). Vendor code: 14
+2025-11-30 11:10:26 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 132.68}
+2025-11-30 11:11:59 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 916.74}
+2025-11-30 11:12:07 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 24.15}
+2025-11-30 11:12:09 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 11.4}
+2025-11-30 11:12:12 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 638.46}
+2025-11-30 11:12:14 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 11.08}
+2025-11-30 11:12:15 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 11.22}
+2025-11-30 11:12:15 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 8.02}
+2025-11-30 11:12:15 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 13.24}
+2025-11-30 11:14:16 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1129.37}
+2025-11-30 11:14:28 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 5750.14}
+2025-11-30 11:19:41 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 710.51}
+2025-11-30 11:19:42 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 844.81}
+2025-11-30 11:20:02 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 811.85}
+2025-11-30 11:20:03 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 851.31}
+2025-11-30 14:52:54 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 1132.38}
+2025-11-30 14:52:57 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1004.05}
+2025-12-01 15:45:28 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 815.05}
+2025-12-01 15:45:31 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 672.67}
+2025-12-01 15:47:36 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 1623.53}
+2025-12-01 15:47:43 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 1032.43}
+2025-12-01 15:51:11 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 484.14}
+2025-12-01 15:51:16 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 3765.81}
+2025-12-01 15:51:37 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 13861.74}
+2025-12-01 15:54:39 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 2942.54}
+2025-12-01 15:55:24 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 831.68}
+2025-12-01 15:55:26 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 836.22}
+2025-12-01 15:57:33 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 483.84}
+2025-12-01 15:58:20 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 46479.53}
+2025-12-01 15:58:43 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 140534.68}

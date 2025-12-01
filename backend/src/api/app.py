@@ -112,6 +112,8 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
             from dataclasses import asdict
             return asdict(report)
         except Exception as e:
+            from src.utils.logger import logger
+            logger.error(f"Run failed: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Run failed: {e}")
     else:
         report_id = create_report_id()
@@ -126,6 +128,8 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
             save_report(report_id, report)
             mark_run_status(report_id, "complete", {"finished_at": datetime.now(timezone.utc).isoformat()})
         except Exception as e:
+            from src.utils.logger import logger
+            logger.error(f"Async run failed: {e}", exc_info=True)
             mark_run_status(report_id, "error", {"error": str(e)})
         return RunAccepted(report_id=report_id, status="queued")
 

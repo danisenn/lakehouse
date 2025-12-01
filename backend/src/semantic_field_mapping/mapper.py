@@ -56,8 +56,6 @@ class SemanticFieldMapper:
         strategy: str = "auto",
         force: bool = False,
     ) -> None:
-        if not reference_fields:
-            raise ValueError("reference_fields must not be empty")
         self.reference_fields: List[str] = list(reference_fields)
         # normalize synonym keys but keep original refs list
         self.synonyms: Dict[str, List[str]] = {}
