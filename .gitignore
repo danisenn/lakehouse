@@ -27,12 +27,14 @@ venv.bak/
 logs
 *.log
 lakehouse.log
+.vscode
 
 # Data Formats etc
 *.csv
 
 *.parquet
 data
+
 
 # Frontend
 frontend/node_modules/

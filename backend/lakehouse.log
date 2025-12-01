@@ -237,3 +237,4 @@ If ADBC supports this database, please run: pip install adbc-driver-adbc+flights
 2025-12-01 15:57:33 - INFO - Request processed: {'method': 'GET', 'path': '/api/v1/tables', 'status_code': 200, 'duration_ms': 483.84}
 2025-12-01 15:58:20 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 46479.53}
 2025-12-01 15:58:43 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 140534.68}
+2025-12-01 16:05:39 - INFO - Request processed: {'method': 'POST', 'path': '/api/v1/run', 'status_code': 200, 'duration_ms': 128878.74}
