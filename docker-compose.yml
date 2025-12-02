@@ -13,9 +13,9 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8010:8010"
+      - "8889:8889"
     environment:
-      - CORS_ORIGINS=http://localhost,http://localhost:80
+      - CORS_ORIGINS=http://localhost,http://localhost:8888
       - ARTIFACT_DIR=/app/artifacts
       - OLLAMA_HOST=http://ollama:11434
     env_file:
@@ -31,9 +31,9 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - "8888:80"
     environment:
-      - VITE_API_URL=http://localhost:8010
+      - VITE_API_URL=http://localhost:8889
     depends_on:
       - backend
     restart: always

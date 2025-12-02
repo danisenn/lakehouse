@@ -25,6 +25,6 @@ COPY src /app/src
 # Pre-create artifacts dir; can be mounted as a volume at runtime
 RUN mkdir -p /app/artifacts
 
-EXPOSE 8010
+EXPOSE 8889
 
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8010"]
+CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8889"]
