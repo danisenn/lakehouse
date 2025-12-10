@@ -96,6 +96,8 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
             use_iqr=payload.anomaly.use_iqr,
             use_zscore=payload.anomaly.use_zscore,
             use_isolation_forest=payload.anomaly.use_isolation_forest,
+            use_missing_values=payload.anomaly.use_missing_values,
+            missing_threshold=payload.anomaly.missing_threshold,
             contamination=payload.anomaly.contamination,
             n_estimators=payload.anomaly.n_estimators,
             random_state=payload.anomaly.random_state,

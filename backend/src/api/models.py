@@ -32,6 +32,8 @@ class AnomalyConfigModel(BaseModel):
     use_iqr: bool = True
     use_zscore: bool = True
     use_isolation_forest: bool = True
+    use_missing_values: bool = True
+    missing_threshold: int = 1
     contamination: Annotated[float, Field(gt=0.0, lt=0.5)] = 0.01
     n_estimators: int = 100
     random_state: int = 42

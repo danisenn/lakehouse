@@ -42,6 +42,8 @@ export interface RunRequest {
         use_iqr?: boolean;
         use_zscore?: boolean;
         use_isolation_forest?: boolean;
+        use_missing_values?: boolean;
+        missing_threshold?: number;
         contamination?: number;
         n_estimators?: number;
         random_state?: number;

@@ -15,6 +15,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create nginx config with API proxy
+# Use env variable for backend URL, default to backend:8889
 RUN echo 'server { \
     listen 80; \
     \
@@ -25,7 +26,10 @@ RUN echo 'server { \
     } \
     \
     location /api/ { \
-    proxy_pass http://backend:8010; \
+    # Note: backend hostname and port set via docker-compose \
+    resolver 127.0.0.11 valid=30s; \
+    set $backend_upstream backend:8889; \
+    proxy_pass http://$backend_upstream; \
     proxy_http_version 1.1; \
     proxy_set_header Upgrade $http_upgrade; \
     proxy_set_header Connection "upgrade"; \

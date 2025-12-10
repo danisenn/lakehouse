@@ -25,6 +25,7 @@ from src.anomaly_detection.utils import (
     select_numeric_columns,
 )
 from src.anomaly_detection.categorical import detect_categorical_anomalies
+from src.anomaly_detection.missing_values import detect_missing_value_anomalies
 
 
 @dataclass
@@ -33,6 +34,8 @@ class AnomalyConfig:
     use_iqr: bool = True
     use_zscore: bool = True
     use_isolation_forest: bool = True
+    use_missing_values: bool = True
+    missing_threshold: int = 1
     contamination: float = 0.01
     n_estimators: int = 100
     random_state: int = 42
@@ -208,6 +211,16 @@ def run_on_dataset(
                 anomalies_saved["categorical"] = maybe_save("categorical", cat_anomalies)
         except Exception as e:
             print(f"Error in Categorical Anomaly detection: {e}")
+
+        # Missing Value Anomalies
+        if anomaly_cfg.use_missing_values:
+            try:
+                missing_anomalies = detect_missing_value_anomalies(df, threshold=anomaly_cfg.missing_threshold)
+                if missing_anomalies.height > 0:
+                    anomalies_counts["missing_values"] = missing_anomalies.height
+                    anomalies_saved["missing_values"] = maybe_save("missing_values", missing_anomalies)
+            except Exception as e:
+                print(f"Error in Missing Value detection: {e}")
 
         # LLM Anomaly Explanation
         # If we have any anomalies, pick a few samples and ask LLM to explain
