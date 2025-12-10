@@ -34,8 +34,6 @@ services:
     build: ./frontend
     ports:
       - "8888:80"
-    environment:
-      - VITE_API_URL=http://localhost:8889
     depends_on:
       - backend
     restart: always
