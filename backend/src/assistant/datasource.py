@@ -36,11 +36,12 @@ class LocalFilesDataSource(DataSource):
 
     def _read_csv(self, path: Path) -> pl.DataFrame:
         n_rows = self.max_rows
+        # Treat empty strings as NULL values for proper missing value detection
         try:
-            return pl.read_csv(path, has_header=True, n_rows=n_rows)
+            return pl.read_csv(path, has_header=True, n_rows=n_rows, null_values=[''])
         except pl.ComputeError:
             # Fallback: assume no header if parsing failed (e.g. type mismatch in first row)
-            df = pl.read_csv(path, has_header=False, n_rows=n_rows)
+            df = pl.read_csv(path, has_header=False, n_rows=n_rows, null_values=[''])
             # Assign some generic names if none
             cols = [f"column_{i}" for i in range(len(df.columns))]
             rename_map = {old: new for old, new in zip(df.columns, cols)}
