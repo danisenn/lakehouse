@@ -2,11 +2,24 @@ import polars as pl
 from typing import Dict, Any, List
 
 def calculate_missing_ratios(df: pl.DataFrame) -> Dict[str, float]:
-    """Berechnet den Anteil fehlender Werte pro Spalte."""
+    """
+    Calculates the ratio of missing values per column.
+    
+    Missing values include:
+    - NULL values (np.nan in source data)
+    - Empty strings ("") in string columns (common from CSV imports)
+    """
     missing_ratios = {}
     for col in df.columns:
+        # Count NULL values
         missing_count = df[col].null_count()
-        ratio = missing_count / df.height
+        
+        # For string columns, also count empty strings
+        if df[col].dtype == pl.Utf8:
+            empty_string_count = (df[col] == "").sum()
+            missing_count += empty_string_count
+        
+        ratio = missing_count / df.height if df.height > 0 else 0.0
         missing_ratios[col] = ratio
     return missing_ratios
 

@@ -6,7 +6,11 @@ def detect_missing_value_anomalies(
     threshold: int = 1
 ) -> pl.DataFrame:
     """
-    Identifies rows containing missing (null/NaN) values.
+    Identifies rows containing missing (null/NaN) or empty string values.
+    
+    This function detects both:
+    - True NULL values (np.nan in source data)
+    - Empty strings ("") which often result from CSV exports/imports
     
     Parameters:
     - df: Input DataFrame
@@ -18,15 +22,27 @@ def detect_missing_value_anomalies(
     if df.height == 0:
         return df.head(0)
     
-    # Count null values per row across all columns
-    # Create expression that counts nulls in each column, then sum horizontally
-    null_count_expr = sum([pl.col(col).is_null().cast(pl.Int32) for col in df.columns])
+    # Count missing values per row across all columns
+    # Missing = NULL or empty string (common in CSV imports)
+    missing_expressions = []
+    for col in df.columns:
+        # Check if column is string type
+        if df[col].dtype == pl.Utf8:
+            # For string columns: count NULLs and empty strings
+            missing_expr = (pl.col(col).is_null() | (pl.col(col) == "")).cast(pl.Int32)
+        else:
+            # For non-string columns: only count NULLs
+            missing_expr = pl.col(col).is_null().cast(pl.Int32)
+        missing_expressions.append(missing_expr)
     
-    # Add a temporary column with null counts
-    df_with_counts = df.with_columns(null_count_expr.alias("_null_count"))
+    # Sum missing values across all columns for each row
+    missing_count_expr = sum(missing_expressions)
     
-    # Filter rows where null count >= threshold
-    anomalies = df_with_counts.filter(pl.col("_null_count") >= threshold)
+    # Add a temporary column with missing value counts
+    df_with_counts = df.with_columns(missing_count_expr.alias("_missing_count"))
+    
+    # Filter rows where missing count >= threshold
+    anomalies = df_with_counts.filter(pl.col("_missing_count") >= threshold)
     
     # Drop the temporary column before returning
-    return anomalies.drop("_null_count")
+    return anomalies.drop("_missing_count")
