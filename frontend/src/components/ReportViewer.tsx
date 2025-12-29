@@ -166,7 +166,9 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                             <td className="px-4 py-2 text-xs text-gray-400 italic max-w-xs truncate">
                                                                 {description || <span className="text-gray-600">-</span>}
                                                             </td>
-                                                            <td className="px-4 py-2 font-mono text-xs">{dtype}</td>
+                                                            <td className="px-4 py-2 font-mono text-xs">
+                                                                {formatType(dtype)}
+                                                            </td>
                                                             <td className="px-4 py-2">
                                                                 {semantic && <Badge variant="success" className="text-[10px] bg-green-900/30 text-green-400 border-green-800">{semantic}</Badge>}
                                                             </td>
@@ -251,4 +253,15 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
             </Card>
         </div>
     );
+}
+
+function formatType(type: string): string {
+    const t = type.toLowerCase();
+    if (t.includes('int')) return 'Integer';
+    if (t.includes('float') || t.includes('double')) return 'Float';
+    if (t.includes('str') || t.includes('utf8')) return 'Text';
+    if (t.includes('bool')) return 'Boolean';
+    if (t.includes('date')) return 'Date';
+    if (t.includes('time')) return 'Timestamp';
+    return type;
 }

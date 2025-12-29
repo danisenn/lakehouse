@@ -38,10 +38,10 @@ class LocalFilesDataSource(DataSource):
         n_rows = self.max_rows
         # Treat empty strings as NULL values for proper missing value detection
         try:
-            return pl.read_csv(path, has_header=True, n_rows=n_rows, null_values=[''])
+            return pl.read_csv(path, has_header=True, n_rows=n_rows, null_values=[''], try_parse_dates=True, infer_schema_length=10000)
         except pl.ComputeError:
             # Fallback: assume no header if parsing failed (e.g. type mismatch in first row)
-            df = pl.read_csv(path, has_header=False, n_rows=n_rows, null_values=[''])
+            df = pl.read_csv(path, has_header=False, n_rows=n_rows, null_values=[''], try_parse_dates=True, infer_schema_length=10000)
             # Assign some generic names if none
             cols = [f"column_{i}" for i in range(len(df.columns))]
             rename_map = {old: new for old, new in zip(df.columns, cols)}
@@ -53,8 +53,24 @@ class LocalFilesDataSource(DataSource):
             df = df.head(self.max_rows)
         return df
 
+    def _read_json(self, path: Path) -> pl.DataFrame:
+        n_rows = self.max_rows
+        # Try reading as standard JSON array first
+        try:
+             # infer_schema_length is not directly supported in read_json, 
+             # but it reads the whole file usually. For huge files we might want scan_json, 
+             # but let's stick to read_json for now as per valid Polars API.
+             # Actually read_json doesn't have try_parse_dates in all versions, 
+             # but let's check what's available or convert after.
+             # Modern polars read_json usually handles schemas well.
+             return pl.read_json(path)
+        except Exception:
+             # Fallback to NDJSON (New line delimited)
+             # infer_schema_length helps here
+             return pl.read_ndjson(path, n_rows=n_rows, infer_schema_length=10000)
+
     def iter_datasets(self) -> Iterator[Dataset]:
-        exts = {".csv", ".parquet"}
+        exts = {".csv", ".parquet", ".json", ".jsonl", ".ndjson"}
         for p in self.root.rglob("*"):
             if not p.is_file():
                 continue
@@ -63,8 +79,11 @@ class LocalFilesDataSource(DataSource):
             try:
                 if p.suffix.lower() == ".csv":
                     df = self._read_csv(p)
-                else:
+                elif p.suffix.lower() == ".parquet":
                     df = self._read_parquet(p)
+                else: # JSON/NDJSON
+                    df = self._read_json(p)
+                
                 name = p.relative_to(self.root).as_posix()
                 yield Dataset(name=name, path=p, df=df)
             except Exception as e:  # continue on read errors

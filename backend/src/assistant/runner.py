@@ -11,6 +11,7 @@ from src.assistant.datasource import DataSource, Dataset
 from src.schema_recognition.inference import schema_inference
 from src.schema_recognition.inference.nested_detection import detect_nested_structures
 from src.schema_recognition.inference.nested_detection import detect_nested_structures
+from src.schema_recognition.inference.type_inference import refine_types
 from src.schema_recognition.inference.statistics import (
     calculate_missing_ratios,
     calculate_numeric_stats,
@@ -93,6 +94,8 @@ def run_on_dataset(
     save_samples_limit: int = 200,
 ) -> DatasetReport:
     df = dataset.df
+    # Enhance schema recognition for non-Parquet files (CSV/JSON) or where inference failed
+    df = refine_types(df)
     rows, cols = df.height, df.width
 
     # Schema
