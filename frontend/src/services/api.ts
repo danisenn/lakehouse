@@ -76,6 +76,8 @@ export interface DatasetReport {
     unmapped: string[];
     anomalies: Record<string, number>;
     anomaly_samples_saved: Record<string, string | null>;
+    anomaly_rows?: Record<string, number[]>;
+    anomaly_previews?: Record<string, Array<Record<string, any>>>;
 }
 
 export interface AssistantReport {

@@ -224,9 +224,55 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                 <div key={method} className="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
                                                     <div className="text-xs text-gray-400 uppercase mb-1">{method}</div>
                                                     <div className="text-2xl font-bold text-red-400">{count}</div>
+                                                    {dataset.anomaly_rows?.[method] && dataset.anomaly_rows[method].length > 0 && (
+                                                        <div className="text-[10px] text-gray-400 mt-2 mb-1 font-mono break-all leading-tight">
+                                                            <span className="font-semibold text-gray-500">Row Idx:</span>{' '}
+                                                            {(() => {
+                                                                const rows = dataset.anomaly_rows![method].sort((a, b) => a - b);
+                                                                const preview = rows.slice(0, 10).join(', ');
+                                                                const remaining = rows.length - 10;
+                                                                return remaining > 0 ? `${preview}, ... (+${remaining})` : preview;
+                                                            })()}
+                                                        </div>
+                                                    )}
                                                     {dataset.anomaly_samples_saved?.[method] && (
-                                                        <div className="text-[10px] text-gray-500 mt-1 truncate">
-                                                            Saved to CSV
+                                                        <div className="text-[10px] text-gray-500 mt-1 truncate flex items-center gap-1">
+                                                            <Database className="h-3 w-3" /> Saved to CSV
+                                                        </div>
+                                                    )}
+
+                                                    {/* Sample Preview */}
+                                                    {dataset.anomaly_previews?.[method] && dataset.anomaly_previews[method].length > 0 && (
+                                                        <div className="mt-3">
+                                                            <div className="text-[10px] uppercase text-gray-500 font-semibold mb-1">Preview Data</div>
+                                                            <div className="overflow-x-auto">
+                                                                <table className="w-full text-left border-collapse">
+                                                                    <thead>
+                                                                        <tr className="border-b border-gray-700">
+                                                                            {Object.keys(dataset.anomaly_previews[method][0]).slice(0, 3).map(key => (
+                                                                                <th key={key} className="p-1 text-[10px] font-mono text-gray-400">{key}</th>
+                                                                            ))}
+                                                                            {Object.keys(dataset.anomaly_previews[method][0]).length > 3 && (
+                                                                                <th className="p-1 text-[10px] font-mono text-gray-400">...</th>
+                                                                            )}
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {dataset.anomaly_previews[method].map((row, i) => (
+                                                                            <tr key={i} className="border-b border-gray-800/50">
+                                                                                {Object.entries(row).slice(0, 3).map(([k, v], j) => (
+                                                                                    <td key={j} className="p-1 text-[10px] font-mono text-gray-300 max-w-[100px] truncate" title={String(v)}>
+                                                                                        {String(v)}
+                                                                                    </td>
+                                                                                ))}
+                                                                                {Object.keys(row).length > 3 && (
+                                                                                    <td className="p-1 text-[10px] text-gray-500">...</td>
+                                                                                )}
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>

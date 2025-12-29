@@ -69,6 +69,8 @@ class DatasetReport:
     unmapped: List[str]
     anomalies: Dict[str, int]  # method -> count
     anomaly_samples_saved: Dict[str, Optional[str]]  # method -> path
+    anomaly_rows: Dict[str, List[int]]  # method -> list of row indices
+    anomaly_previews: Dict[str, List[Dict[str, Any]]] = None # method -> list of sample rows
 
 
 @dataclass
@@ -96,7 +98,11 @@ def run_on_dataset(
     df = dataset.df
     # Enhance schema recognition for non-Parquet files (CSV/JSON) or where inference failed
     df = refine_types(df)
+    
     rows, cols = df.height, df.width
+    
+    # Create a version with row index specifically for anomaly tracking
+    df_anom = df.with_row_count("row_idx")
 
     # Schema
     schema = infer_schema(df)
@@ -152,15 +158,17 @@ def run_on_dataset(
     # Anomaly detection
     anomalies_counts: Dict[str, int] = {}
     anomalies_saved: Dict[str, Optional[str]] = {}
+    anomalies_rows: Dict[str, List[int]] = {}
+    anomalies_previews: Dict[str, List[Dict[str, Any]]] = {}
 
-    numeric_cols = select_numeric_columns(df)
+    numeric_cols = select_numeric_columns(df_anom, exclude=["row_idx"])
 
     def maybe_save(name: str, adf: pl.DataFrame) -> Optional[str]:
         if save_dir is None or adf.is_empty():
             return None
         out = save_dir / f"{Path(dataset.name).as_posix().replace('/', '__')}__{name}.csv"
         out.parent.mkdir(parents=True, exist_ok=True)
-        adf.head(save_samples_limit).write_csv(out)
+        adf.drop("row_idx").head(save_samples_limit).write_csv(out)
         return str(out)
 
     if mapping_cfg.reference_fields and numeric_cols:
@@ -169,8 +177,14 @@ def run_on_dataset(
             total = 0
             for c in numeric_cols:
                 try:
-                    adf = detect_anomalies(df, method="zscore", columns=[c], threshold=anomaly_cfg.z_threshold)
+                    adf = detect_anomalies(df_anom, method="zscore", columns=[c], threshold=anomaly_cfg.z_threshold)
                     total += adf.height
+                    if not adf.is_empty():
+                        current_rows = anomalies_rows.get("zscore", [])
+                        current_rows.extend(adf["row_idx"].to_list())
+                        anomalies_rows["zscore"] = sorted(list(set(current_rows)))
+                        if "zscore" not in anomalies_previews:
+                             anomalies_previews["zscore"] = adf.drop("row_idx").head(5).to_dicts()
                 except (pl.ComputeError, ValueError) as e:
                     # Log error but continue with other columns
                     print(f"Error in Z-Score detection for column {c}: {e}")
@@ -181,8 +195,14 @@ def run_on_dataset(
             total = 0
             for c in numeric_cols:
                 try:
-                    adf = detect_anomalies(df, method="iqr", columns=[c])
+                    adf = detect_anomalies(df_anom, method="iqr", columns=[c])
                     total += adf.height
+                    if not adf.is_empty():
+                        current_rows = anomalies_rows.get("iqr", [])
+                        current_rows.extend(adf["row_idx"].to_list())
+                        anomalies_rows["iqr"] = sorted(list(set(current_rows)))
+                        if "iqr" not in anomalies_previews:
+                             anomalies_previews["iqr"] = adf.drop("row_idx").head(5).to_dicts()
                 except (pl.ComputeError, ValueError) as e:
                      print(f"Error in IQR detection for column {c}: {e}")
                      continue
@@ -192,7 +212,7 @@ def run_on_dataset(
         if anomaly_cfg.use_isolation_forest and len(numeric_cols) >= 1:
             try:
                 adf = detect_anomalies(
-                    df,
+                    df_anom,
                     method="isolation_forest",
                     columns=numeric_cols,
                     contamination=anomaly_cfg.contamination,
@@ -200,6 +220,9 @@ def run_on_dataset(
                     random_state=anomaly_cfg.random_state,
                 )
                 anomalies_counts["isolation_forest"] = adf.height
+                if not adf.is_empty():
+                    anomalies_rows["isolation_forest"] = adf["row_idx"].to_list()
+                    anomalies_previews["isolation_forest"] = adf.drop("row_idx").head(5).to_dicts()
                 anomalies_saved["isolation_forest"] = maybe_save("isoforest", adf)
             except (pl.ComputeError, ValueError, ImportError) as e:
                 print(f"Error in Isolation Forest detection: {e}")
@@ -208,9 +231,11 @@ def run_on_dataset(
 
         # Categorical Anomalies
         try:
-            cat_anomalies = detect_categorical_anomalies(df)
+            cat_anomalies = detect_categorical_anomalies(df_anom)
             if cat_anomalies.height > 0:
                 anomalies_counts["categorical"] = cat_anomalies.height
+                anomalies_rows["categorical"] = cat_anomalies["row_idx"].to_list()
+                anomalies_previews["categorical"] = cat_anomalies.drop("row_idx").head(5).to_dicts()
                 anomalies_saved["categorical"] = maybe_save("categorical", cat_anomalies)
         except Exception as e:
             print(f"Error in Categorical Anomaly detection: {e}")
@@ -218,9 +243,11 @@ def run_on_dataset(
         # Missing Value Anomalies
         if anomaly_cfg.use_missing_values:
             try:
-                missing_anomalies = detect_missing_value_anomalies(df, threshold=anomaly_cfg.missing_threshold)
+                missing_anomalies = detect_missing_value_anomalies(df_anom, threshold=anomaly_cfg.missing_threshold)
                 if missing_anomalies.height > 0:
                     anomalies_counts["missing_values"] = missing_anomalies.height
+                    anomalies_rows["missing_values"] = missing_anomalies["row_idx"].to_list()
+                    anomalies_previews["missing_values"] = missing_anomalies.drop("row_idx").head(5).to_dicts()
                     anomalies_saved["missing_values"] = maybe_save("missing_values", missing_anomalies)
             except Exception as e:
                 print(f"Error in Missing Value detection: {e}")
@@ -271,6 +298,8 @@ def run_on_dataset(
         unmapped=mapping_result.get("unmapped", []),
         anomalies=anomalies_counts,
         anomaly_samples_saved=anomalies_saved,
+        anomaly_rows=anomalies_rows,
+        anomaly_previews=anomalies_previews,
     )
 
 
