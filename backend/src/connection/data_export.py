@@ -28,6 +28,8 @@ def list_tables(space_path="lakehouse.datalake.raw"):
             return tables["TABLE_NAME"].to_list()
     except Exception as e:
         logger.error(f"Fehler beim Abrufen der Tabellen im Schema {space_path}: {e}")
+        if "connection" in str(e).lower() or "failed to connect" in str(e).lower():
+             logger.error("HINT: Check your DREMIO_HOST in .env. If running in Docker on a server, use 'host.docker.internal' or the specific IP, not 'localhost'.")
         return []
 
 SAMPLE_SIZE = 20  # Anzahl der Zeilen im Sample

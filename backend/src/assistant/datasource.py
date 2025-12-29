@@ -158,6 +158,9 @@ class LakehouseSQLDataSource(DataSource):
             df = self._execute_query(q)
             yield Dataset(name=self.name, path=None, df=df)
         except Exception as e:
+            print(f"Error executing query: {e}")
+            if "connection" in str(e).lower() or "failed to connect" in str(e).lower():
+                print("HINT: Check your DREMIO_HOST in .env. If running in Docker on a server, use 'host.docker.internal' or the specific IP, not 'localhost'.")
             warn_df = pl.DataFrame({"_error": [str(e)]})
             yield Dataset(name=f"{self.name} (error)", path=None, df=warn_df)
 
@@ -174,6 +177,9 @@ class LakehouseSQLDataSource(DataSource):
                 yield from self._fetch_table(table_name)
                 
         except Exception as e:
+            print(f"Schema discovery failed: {e}")
+            if "connection" in str(e).lower() or "failed to connect" in str(e).lower():
+                print("HINT: Check your DREMIO_HOST in .env. If running in Docker on a server, use 'host.docker.internal' or the specific IP, not 'localhost'.")
             warn_df = pl.DataFrame({"_error": [f"Schema discovery failed: {str(e)}"]})
             yield Dataset(name=f"{self.schema} (discovery_error)", path=None, df=warn_df)
 

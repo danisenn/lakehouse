@@ -23,6 +23,23 @@ docker compose -f docker-compose.server.yml up -d
 # - Ollama: http://localhost:11434
 ```
 
+```
+
+### Environment Configuration
+
+The backend services require environment variables for connecting to the Lakehouse (Dremio). Ensure your `.env` file is configured correctly:
+
+```bash
+DREMIO_USER=your_user
+DREMIO_PASSWORD=your_password
+# VITAL: If Dremio is on the SAME server as Docker, use 'host.docker.internal'
+# If Dremio is on a REMOTE server, use that server's IP.
+# Do NOT use 'localhost' or '127.0.0.1' inside Docker.
+DREMIO_HOST=host.docker.internal
+DREMIO_PORT=32010
+DREMIO_USE_TLS=false
+```
+
 ### Local Development
 
 For local development, you can run the backend in Docker and the frontend locally for hot-reloading.
