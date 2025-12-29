@@ -7,6 +7,43 @@ This repository includes a unified assistant that evaluates datasets using:
 - schema_recognition (infers column names and dtypes)
 - semantic_field_mapping (maps dataset columns to your reference fields)
 
+## Running with Docker
+
+### Server / Production
+
+To run the full stack (Backend + Frontend + Ollama) in a production or server environment:
+
+```bash
+# Start all services
+docker compose -f docker-compose.server.yml up -d
+
+# The services will be available at:
+# - Backend: http://localhost:8889
+# - Frontend: http://localhost:8888
+# - Ollama: http://localhost:11434
+```
+
+### Local Development
+
+For local development, you can run the backend in Docker and the frontend locally for hot-reloading.
+
+**1. Start Backend:**
+
+```bash
+# Runs backend + Ollama
+docker compose -f docker-compose.local.yml up
+# Backend will be at http://localhost:8000
+```
+
+**2. Start Frontend:**
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Frontend will be at http://localhost:5173
+```
+
 ### Quick start
 1) Install dependencies:
 ```
