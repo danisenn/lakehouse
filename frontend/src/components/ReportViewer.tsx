@@ -157,6 +157,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                             Completeness
                                                             <InfoTooltip content="Percentage of non-null values. Red/Yellow indicates high missing data." />
                                                         </div>
+
                                                     </th>
                                                     <th className="px-4 py-2 rounded-tr-lg">
                                                         <div className="flex items-center gap-1">
