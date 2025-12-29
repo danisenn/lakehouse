@@ -3,6 +3,7 @@ import type { AssistantReport } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
 import { Badge } from './ui/Badge';
+import { InfoTooltip } from './ui/InfoTooltip';
 
 export default function ReportViewer({ report }: { report: AssistantReport | null }) {
     if (!report) {
@@ -33,7 +34,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-gray-900/50 border-gray-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-400">Total Datasets</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm font-medium text-gray-400">Total Datasets</CardTitle>
+                            <InfoTooltip content="Number of distinct tables or files analyzed in this report." />
+                        </div>
                         <Database className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
@@ -45,7 +49,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                 </Card>
                 <Card className="bg-gray-900/50 border-gray-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-400">Total Rows</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm font-medium text-gray-400">Total Rows</CardTitle>
+                            <InfoTooltip content="Total number of records across all datasets." />
+                        </div>
                         <FileText className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
@@ -55,7 +62,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                 </Card>
                 <Card className="bg-gray-900/50 border-gray-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-400">Total Columns</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm font-medium text-gray-400">Total Columns</CardTitle>
+                            <InfoTooltip content="Total number of fields analyzed across all tables." />
+                        </div>
                         <FileText className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
@@ -65,7 +75,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                 </Card>
                 <Card className="bg-gray-900/50 border-gray-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-400">Anomalies Found</CardTitle>
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm font-medium text-gray-400">Anomalies Found</CardTitle>
+                            <InfoTooltip content="Total count of data quality issues detected across all datasets." />
+                        </div>
                         <AlertTriangle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
@@ -102,7 +115,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                             <p className="text-sm text-gray-400 font-mono mt-1">{dataset.path}</p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-medium text-gray-300">Mapping Coverage</div>
+                                            <div className="text-sm font-medium text-gray-300 flex items-center justify-end gap-1">
+                                                Mapping Coverage
+                                                <InfoTooltip content="Percentage of columns successfully mapped to semantic conceptual fields." />
+                                            </div>
                                             <div className="text-2xl font-bold text-blue-400">
                                                 {Math.round((Object.keys(dataset.mapping).length / dataset.cols) * 100)}%
                                             </div>
@@ -123,11 +139,31 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                             <thead className="text-xs text-gray-500 uppercase bg-gray-800/50">
                                                 <tr>
                                                     <th className="px-4 py-2 rounded-tl-lg">Column</th>
-                                                    <th className="px-4 py-2">Description</th>
+                                                    <th className="px-4 py-2">
+                                                        <div className="flex items-center gap-1">
+                                                            Description
+                                                            <InfoTooltip content="AI-generated description based on column name and data samples." />
+                                                        </div>
+                                                    </th>
                                                     <th className="px-4 py-2">Type</th>
-                                                    <th className="px-4 py-2">Semantic</th>
-                                                    <th className="px-4 py-2">Completeness</th>
-                                                    <th className="px-4 py-2 rounded-tr-lg">Mapping</th>
+                                                    <th className="px-4 py-2">
+                                                        <div className="flex items-center gap-1">
+                                                            Semantic
+                                                            <InfoTooltip content="Inferred semantic type (e.g., Phone, Email, Currency) to help with standardization." />
+                                                        </div>
+                                                    </th>
+                                                    <th className="px-4 py-2">
+                                                        <div className="flex items-center gap-1">
+                                                            Completeness
+                                                            <InfoTooltip content="Percentage of non-null values. Red/Yellow indicates high missing data." />
+                                                        </div>
+                                                    </th>
+                                                    <th className="px-4 py-2 rounded-tr-lg">
+                                                        <div className="flex items-center gap-1">
+                                                            Mapping
+                                                            <InfoTooltip content="Target field this column is mapped to for downstream processing." />
+                                                        </div>
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -222,7 +258,10 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                             {Object.entries(dataset.anomalies).map(([method, count]) => (
                                                 <div key={method} className="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-                                                    <div className="text-xs text-gray-400 uppercase mb-1">{method}</div>
+                                                    <div className="text-xs text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                                        {method}
+                                                        <InfoTooltip content={`Anomaly detection method: ${method}`} />
+                                                    </div>
                                                     <div className="text-2xl font-bold text-red-400">{count}</div>
                                                     {dataset.anomaly_rows?.[method] && dataset.anomaly_rows[method].length > 0 && (
                                                         <div className="text-[10px] text-gray-400 mt-2 mb-1 font-mono break-all leading-tight">

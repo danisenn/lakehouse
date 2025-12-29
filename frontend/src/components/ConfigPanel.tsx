@@ -8,6 +8,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Badge } from './ui/Badge';
+import { InfoTooltip } from './ui/InfoTooltip';
 
 export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report: any) => void }) {
     const [mode, setMode] = useState<'local' | 'single_table' | 'all_tables' | 'custom_query'>('local');
@@ -118,6 +119,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                         <Database className="h-4 w-4 text-gray-500" />
                         Source Mode
+                        <InfoTooltip content="Choose where the data comes from: local options or SQL queries." />
                     </label>
                     <Select
                         value={mode}
@@ -193,6 +195,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 text-gray-500" />
                         Reference Fields
+                        <InfoTooltip content="Comma-separated list of field names (e.g., label, title) used to align metrics across datasets." />
                     </label>
                     <Input
                         type="text"
@@ -205,7 +208,10 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
                 <div className="space-y-4 pt-2">
                     <div className="flex justify-between items-center">
-                        <label className="text-sm font-medium text-gray-300">Similarity Threshold</label>
+                        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            Similarity Threshold
+                            <InfoTooltip content="Minimum score (0-1) required for two fields to be considered a match." />
+                        </label>
                         <Badge variant="outline" className="font-mono">{threshold.toFixed(2)}</Badge>
                     </div>
                     <input
