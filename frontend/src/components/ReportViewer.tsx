@@ -299,7 +299,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                                     <tbody>
                                                                         {dataset.anomaly_previews[method].map((row, i) => (
                                                                             <tr key={i} className="border-b border-gray-800/50">
-                                                                                {Object.entries(row).slice(0, 3).map(([k, v], j) => (
+                                                                                {Object.entries(row).slice(0, 3).map(([, v], j) => (
                                                                                     <td key={j} className="p-1 text-[10px] font-mono text-gray-300 max-w-[100px] truncate" title={String(v)}>
                                                                                         {String(v)}
                                                                                     </td>
