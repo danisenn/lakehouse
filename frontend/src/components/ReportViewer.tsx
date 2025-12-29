@@ -268,7 +268,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                         <div className="text-[10px] text-gray-400 mt-2 mb-1 font-mono break-all leading-tight">
                                                             <span className="font-semibold text-gray-500">Row Idx:</span>{' '}
                                                             {(() => {
-                                                                const rows = dataset.anomaly_rows![method].sort((a, b) => a - b);
+                                                                const rows = dataset.anomaly_rows![method].slice().sort((a, b) => a - b);
                                                                 const preview = rows.slice(0, 10).join(', ');
                                                                 const remaining = rows.length - 10;
                                                                 return remaining > 0 ? `${preview}, ... (+${remaining})` : preview;
