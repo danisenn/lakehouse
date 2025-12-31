@@ -173,3 +173,13 @@ def list_tables_endpoint(schema: str = "lakehouse.datalake.raw"):
         return {"tables": tables}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list tables: {e}")
+
+
+@app.get("/api/v1/schemas")
+def list_schemas_endpoint():
+    from src.connection.data_export import list_schemas
+    try:
+        schemas = list_schemas()
+        return {"schemas": schemas}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list schemas: {e}")

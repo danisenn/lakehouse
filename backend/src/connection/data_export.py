@@ -32,6 +32,19 @@ def list_tables(space_path="lakehouse.datalake.raw"):
              logger.error("HINT: Check your DREMIO_HOST in .env. If running in Docker on a server, use 'host.docker.internal' or the specific IP, not 'localhost'.")
         return []
 
+def list_schemas():
+    """Return a list of all schema names."""
+    query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA'
+    try:
+        with _get_dbapi_connection() as conn:
+            schemas = pl.read_database(query=query, connection=conn)
+            return schemas["SCHEMA_NAME"].to_list()
+    except Exception as e:
+        logger.error(f"Fehler beim Abrufen der Schemas: {e}")
+        if "connection" in str(e).lower() or "failed to connect" in str(e).lower():
+             logger.error("HINT: Check your DREMIO_HOST in .env. If running in Docker on a server, use 'host.docker.internal' or the specific IP, not 'localhost'.")
+        return []
+
 SAMPLE_SIZE = 20  # Anzahl der Zeilen im Sample
 
 def export_table_sample_to_csv(schema_name, table_name, output_dir):

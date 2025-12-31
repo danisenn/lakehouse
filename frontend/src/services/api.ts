@@ -110,6 +110,11 @@ export const api = {
         const response = await apiClient.get(`/api/v1/tables`, { params: { schema } });
         return response.data;
     },
+
+    listSchemas: async () => {
+        const response = await apiClient.get('/api/v1/schemas');
+        return response.data;
+    },
 };
 
 export default api;
