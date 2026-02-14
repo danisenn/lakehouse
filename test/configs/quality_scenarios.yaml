@@ -1,0 +1,13 @@
+scenarios:
+  high_quality:
+    missing_values: 0.03
+    outliers: 0.01
+  medium_quality:
+    missing_values: 0.10
+    invalid_values: 0.05
+    duplicates: 0.05
+  low_quality:
+    missing_values: 0.20
+    invalid_values: 0.10
+    outliers: 0.05
+    format_errors: 0.02

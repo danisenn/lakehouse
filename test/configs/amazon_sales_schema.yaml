@@ -1,0 +1,20 @@
+# Optional: specify a source file to load instead of generating random data
+# source_file: /Users/daniel/lakehouse/data/archive/amazon_sales.csv  # or .parquet
+# Commented out to use synthetic data generation (better for benchmarking with known ground truth)
+columns:
+  product_id: string
+  product_name: string
+  category: string
+  discounted_price: float
+  actual_price: float
+  discount_percentage: float
+  rating: float
+  rating_count: int
+  about_product: string
+  user_id: string
+  user_name: string
+  review_id: string
+  review_title: string
+  review_content: string
+  img_link: string
+  product_link: string

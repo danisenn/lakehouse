@@ -47,3 +47,5 @@ frontend/build/
 backend/__pycache__/
 backend/.pytest_cache/
 backend/artifacts/
+
+tex
