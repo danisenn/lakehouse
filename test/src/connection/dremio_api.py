@@ -137,21 +137,32 @@ class DremioAPI:
         url = f"{self.v3_url}/catalog/{quoted_id}"
         
         # Dremio v3 is case-sensitive for format types
-        fmt = "Text" if format_type.upper() == "CSV" else format_type.capitalize()
-        if format_type.upper() == "PARQUET":
-             fmt = "Parquet"
+        if format_type.upper() == "CSV":
+            fmt = "Text"
+            format_settings = {
+                "type": fmt,
+                "fieldDelimiter": ",",
+                "lineDelimiter": "\n",
+                "quote": "\"",
+                "escape": "\"",
+                "extractHeader": True,
+                "skipFirstLine": False,
+                "trimHeader": True
+            }
         elif format_type.upper() == "JSON":
-             fmt = "Json"
-
-        format_settings = {
-            "type": fmt,
-            "fieldDelimiter": ",",
-            "lineDelimiter": "\n",
-            "extractHeader": True,
-            "skipFirstLine": False,
-            "autoGenerateColumnNames": True,
-            "trimHeader": True
-        }
+            fmt = "JSON"
+            format_settings = {
+                "type": fmt,
+                "ignoreOtherFileFormats": False
+            }
+        elif format_type.upper() == "PARQUET":
+            fmt = "Parquet"
+            format_settings = {
+                "type": fmt
+            }
+        else:
+            fmt = format_type.capitalize()
+            format_settings = {"type": fmt}
 
         payload = {
             "entityType": "dataset",
@@ -175,19 +186,56 @@ class DremioAPI:
             print(f"Error promoting dataset {path[-1]}: {e}")
             return False
 
-def promote_to_dremio(bucket: str, object_path: str, format_type: str):
+    def delete_dataset(self, path: List[str]) -> bool:
+        """Delete a physical dataset from the catalog using v3 API."""
+        entry = self.get_catalog_entry_by_path(path)
+        if not entry:
+            return False
+            
+        if entry.get("entityType") != "dataset":
+            print(f"Path {path} is not a dataset")
+            return False
+            
+        dataset_id = entry.get("id")
+        quoted_id = requests.utils.quote(dataset_id, safe='')
+        url = f"{self.v3_url}/catalog/{quoted_id}"
+        
+        try:
+            response = requests.delete(url, headers=self.get_headers(), timeout=10)
+            if response.status_code in [200, 204]:
+                print(f"✓ Successfully deleted dataset {path[-1]}")
+                return True
+            else:
+                print(f"Error deleting dataset {path[-1]}: {response.status_code} {response.text}")
+                return False
+        except Exception as e:
+            print(f"Error deleting dataset {path[-1]}: {e}")
+            return False
+
+def promote_to_dremio(bucket: str, object_path: str, format_type: str, target_schema: str = None):
     """Utility function to promote an uploaded file in MinIO to a Dremio dataset."""
     api = DremioAPI()
     if not api.login():
         return False
         
-    # Standard source name 'lakehouse' in our environment
-    # The path should be [source, bucket, ...rest]
-    path_components = ["lakehouse", bucket] + object_path.split("/")
-    path_components = [p for p in path_components if p]
+    if target_schema:
+        schema_parts = target_schema.split(".")
+        obj_parts = [p for p in object_path.split("/") if p]
+        
+        # Avoid duplication: if the first obj_part matches the last schema part, skip it
+        # e.g. schema=lakehouse.datalake.benchmark_test + obj=benchmark_test/file.csv
+        #   -> should be [lakehouse, datalake, benchmark_test, file.csv]
+        if obj_parts and obj_parts[0] == schema_parts[-1]:
+            path_components = schema_parts + obj_parts[1:]
+        elif obj_parts and obj_parts[0] == bucket and bucket in schema_parts:
+            path_components = schema_parts + obj_parts[1:]
+        else:
+            path_components = schema_parts + obj_parts
+    else:
+        path_components = ["lakehouse", bucket] + [p for p in object_path.split("/") if p]
     
-    # Clean file extension if Dremio already stripped it (unlikely for raw files)
-    # but we'll try the exact path first.
+    path_components = [p for p in path_components if p]
+    print(f"    Promotion path: {path_components}")
     return api.promote_dataset(path_components, format_type)
 
 if __name__ == "__main__":

@@ -13,15 +13,40 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
 import pandas as pd
+import subprocess
 
-# Ensure src modules can be imported
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+# Path setup
+TEST_DIR = Path(__file__).resolve().parent.parent
 
+sys.path.append(str(TEST_DIR))
 from src.lakehouse_loader import list_tables, download_table, convert_dremio_to_yaml_types
 from src.storage.upload import upload_df_to_minio
 from src.connection.dremio_api import promote_to_dremio
 from src.generators.combined_scenarios import apply_combined_scenario
 import yaml
+
+
+def compute_ground_truth_types(df: pd.DataFrame) -> Dict:
+    """
+    Compute original schema and semantic types by calling compute_ground_truth.py
+    as a subprocess (avoids test/backend src namespace collision).
+    """
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)
+    try:
+        df.to_csv(tmp.name, index=False)
+        script = Path(__file__).resolve().parent / "compute_ground_truth.py"
+        result = subprocess.run(
+            [sys.executable, str(script), tmp.name],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            return json.loads(result.stdout)
+        else:
+            print(f"    ⚠ Ground truth computation failed: {result.stderr[:200]}")
+            return {}
+    finally:
+        os.unlink(tmp.name)
 
  
 def load_quality_scenarios(config_path: str = None) -> Dict:
@@ -58,6 +83,7 @@ def generate_quality_variants(
     bucket_name: str = "datalake",
     upload: bool = True,
     save_local_json: bool = True,
+    target_schema: str = None,
     file_format: str = None
 ) -> None:
     """
@@ -80,6 +106,14 @@ def generate_quality_variants(
     print(f"Processing: {table_name}")
     print(f"{'='*60}")
     
+    # Compute ground truth schema and semantic types from the ORIGINAL data
+    print(f"  Computing ground truth schema and semantic types...")
+    gt_types = compute_ground_truth_types(df)
+    original_schema = gt_types.get("original_schema", {})
+    original_semantic_types = gt_types.get("expected_semantic_types", {})
+    print(f"    ✓ Original schema: {len(original_schema)} columns typed")
+    print(f"    ✓ Semantic types detected: {original_semantic_types}")
+    
     for scenario_name, config in quality_scenarios['scenarios'].items():
         print(f"\n  Generating {scenario_name} variant...")
         
@@ -99,6 +133,9 @@ def generate_quality_variants(
                         'quality_level': scenario_name,
                         'generated_at': datetime.now().isoformat(),
                         'row_count': len(df_variant),
+                        'columns': list(df.columns),
+                        'original_schema': original_schema,
+                        'expected_semantic_types': original_semantic_types,
                         'quality_config': config,
                         'degradation_metadata': metadata
                     }, f, indent=2, default=str)
@@ -106,7 +143,21 @@ def generate_quality_variants(
             
             # Upload to lakehouse (NO local CSV saved)
             if upload:
-                object_name = f"quality_variants/{variant_table_name}"
+                # If target_schema is provided, use the last part as a folder prefix 
+                # (unless it matches the bucket name exactly)
+                if target_schema:
+                    schema_parts = target_schema.split(".")
+                    # If the last part is the table name itself, we go one level up
+                    # but usually target_schema is like 'lakehouse.datalake.quality_variants'
+                    prefix = schema_parts[-1]
+                    if prefix == bucket_name:
+                        object_name = variant_table_name
+                    else:
+                        object_name = f"{prefix}/{variant_table_name}"
+                else:
+                    # Default
+                    object_name = f"quality_variants/{variant_table_name}"
+                    
                 upload_df_to_minio(
                     df_variant, 
                     bucket_name, 
@@ -126,7 +177,7 @@ def generate_quality_variants(
                     elif file_format == "parquet" and not promo_object.endswith(".parquet"):
                         promo_object += ".parquet"
                     
-                    if promote_to_dremio(bucket_name, promo_object, file_format):
+                    if promote_to_dremio(bucket_name, promo_object, file_format, target_schema=target_schema):
                         print(f"    ✓ Automatically ingested into Dremio")
                     else:
                         print(f"    ⚠ Auto-ingestion failed (manual declaration might be needed)")
@@ -192,6 +243,13 @@ Examples:
         help='MinIO bucket name (default: datalake)'
     )
     
+    parser.add_argument(
+        '--target-schema',
+        type=str,
+        default='lakehouse.datalake.quality_variants',
+        help='Target Dremio schema for quality variants (default: lakehouse.datalake.quality_variants)'
+    )
+    
     args = parser.parse_args()
     
     # Validate arguments
@@ -237,6 +295,9 @@ Examples:
             elif table_name.endswith('.parquet'):
                 detected_format = 'parquet'
                 clean_table_name = table_name.replace('.parquet', '')
+            elif table_name.endswith('.json'):
+                detected_format = 'json'
+                clean_table_name = table_name.replace('.json', '')
             else:
                 # Assume Delta table if no extension
                 detected_format = 'delta'
@@ -253,7 +314,8 @@ Examples:
                 bucket_name=args.bucket,
                 upload=upload,
                 file_format=detected_format,
-                save_local_json=True
+                save_local_json=True,
+                target_schema=args.target_schema
             )
             
             total_variants += len(scenarios['scenarios'])

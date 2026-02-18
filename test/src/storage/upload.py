@@ -2,6 +2,7 @@ import pandas as pd
 from .formats.csv import upload_csv
 from .formats.delta import upload_delta
 from .formats.parquet import upload_parquet
+from .formats.json import upload_json
 
 def upload_df_to_minio(df: pd.DataFrame, bucket: str, object_name: str, file_format: str = "csv", schema_config: dict = None):
     """
@@ -13,5 +14,7 @@ def upload_df_to_minio(df: pd.DataFrame, bucket: str, object_name: str, file_for
         upload_delta(df, bucket, object_name, schema_config=schema_config)
     elif file_format == "parquet":
         upload_parquet(df, bucket, object_name)
+    elif file_format == "json":
+        upload_json(df, bucket, object_name)
     else:
         raise ValueError(f"Unsupported file format: {file_format}")

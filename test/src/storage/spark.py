@@ -27,6 +27,8 @@ def get_spark_session(app_name="DataGenerationPipeline"):
         minio_endpoint = f"http://{minio_endpoint}"
 
     # 4. Build Session
+    # Updated for Spark 4.0.1 / Scala 2.13 compatibility
+    # Using delta-spark_2.13 and a later version if available, or sticking to 3.0.0 coordinates for now
     spark = SparkSession.builder \
         .appName(app_name) \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
@@ -39,7 +41,7 @@ def get_spark_session(app_name="DataGenerationPipeline"):
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false") \
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider") \
         .config("spark.delta.logStore.class", "org.apache.spark.sql.delta.storage.S3SingleDriverLogStore") \
-        .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4") \
+        .config("spark.jars.packages", "io.delta:delta-spark_2.13:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4") \
         .getOrCreate()
         
     return spark
