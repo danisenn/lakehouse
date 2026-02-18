@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Literal, Optional, Sequence
 
 from .rules import z_score_anomalies, iqr_anomalies
-from .isolation_forrest import isolation_forest_anomalies
+from .isolation_forest import isolation_forest_anomalies
 
 
 Method = Literal["zscore", "iqr", "isolation_forest"]
