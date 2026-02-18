@@ -1,55 +1,55 @@
-# AI-Powered Assistance System for Semantic Data Integration in Lakehouse Architectures 
+# AI-Powered Assistance System for Semantic Data Integration in Lakehouse Architectures
 
-## Lakehouse Assistance System
+## Overview
 
 This repository includes a unified assistant that evaluates datasets using:
-- anomaly_detection (Z-Score, IQR, Isolation Forest)
-- schema_recognition (infers column names and dtypes)
-- semantic_field_mapping (maps dataset columns to your reference fields)
+- **Anomaly Detection** — Z-Score, IQR, Isolation Forest
+- **Schema Recognition** — infers column names and data types
+- **Semantic Field Mapping** — maps dataset columns to your reference fields
+
+## Getting Started
+
+### Prerequisites
+
+- Docker & Docker Compose
+- Node.js (for local frontend development)
+
+### Environment Setup
+
+Copy the example environment file and fill in your credentials:
+
+```bash
+cp .env.example .env
+# Edit .env with your Dremio/MinIO credentials
+```
+
+> **Note:** If Dremio is on the **same server** as Docker, set `DREMIO_HOST=host.docker.internal`.
+> If Dremio is on a **remote server**, use that server's IP. Do **not** use `localhost` inside Docker.
+
+---
 
 ## Running with Docker
 
 ### Server / Production
 
-To run the full stack (Backend + Frontend + Ollama) in a production or server environment:
-
 ```bash
-# Start all services
 docker compose -f docker-compose.server.yml up -d
 
-# The services will be available at:
-# - Backend: http://localhost:8889
-# - Frontend: http://localhost:8888
-# - Ollama: http://localhost:11434
-```
-
-```
-
-### Environment Configuration
-
-The backend services require environment variables for connecting to the Lakehouse (Dremio). Ensure your `.env` file is configured correctly:
-
-```bash
-DREMIO_USER=your_user
-DREMIO_PASSWORD=your_password
-# VITAL: If Dremio is on the SAME server as Docker, use 'host.docker.internal'
-# If Dremio is on a REMOTE server, use that server's IP.
-# Do NOT use 'localhost' or '127.0.0.1' inside Docker.
-DREMIO_HOST=host.docker.internal
-DREMIO_PORT=32010
-DREMIO_USE_TLS=false
+# Services:
+#   Backend:  http://localhost:8889
+#   Frontend: http://localhost:8888
+#   Ollama:   http://localhost:11434
 ```
 
 ### Local Development
 
-For local development, you can run the backend in Docker and the frontend locally for hot-reloading.
+Run the backend in Docker and the frontend locally for hot-reloading:
 
-**1. Start Backend:**
+**1. Start Backend + Ollama:**
 
 ```bash
-# Runs backend + Ollama
 docker compose -f docker-compose.local.yml up
-# Backend will be at http://localhost:8000
+# Backend at http://localhost:8000
 ```
 
 **2. Start Frontend:**
@@ -58,43 +58,75 @@ docker compose -f docker-compose.local.yml up
 cd frontend
 npm install
 npm run dev
-# Frontend will be at http://localhost:5173
+# Frontend at http://localhost:5173
 ```
 
-### Quick start
-1) Install dependencies:
-```
-pip install -r requirements.txt
+---
+
+## CLI Usage
+
+### Quick Start
+
+```bash
+pip install -r backend/requirements.txt
+
+python3 backend/scripts/lakehouse_assistant.py \
+  --config backend/configs/assistant_example.yml \
+  --refs label,title,text \
+  --verbose
 ```
 
-2) Run on local data folder (defaults to `data/`):
+### CLI Options
+
 ```
-python3 scripts/lakehouse_assistant.py --config configs/assistant_example.yml --refs label,title,text --verbose
+python backend/scripts/lakehouse_assistant.py --help
 ```
 
-3) See outputs:
-- JSON report at `artifacts/assistant_report.json`
-- Anomaly samples under `artifacts/anomalies/`
-
-### CLI options
-```
-python scripts/lakehouse_assistant.py --help
-```
 Key flags:
-- `--root PATH`               folder to scan for CSV/Parquet
-- `--refs a,b,c`              reference fields for semantic mapping
-- `--refs-file PATH`          YAML/JSON containing `reference_fields: [...]`
-- `--synonyms-file PATH`      YAML/JSON dict of `{ field: [aliases...] }`
-- `--threshold FLOAT`         mapping acceptance cutoff (default 0.7)
-- `--epsilon FLOAT`           ambiguity window (default 0.05)
-- `--use-zscore/--use-iqr/--use-isoforest` toggles detectors (default: all on)
-- `--z-threshold FLOAT`       Z-Score threshold (default 3.0)
-- `--contamination FLOAT`     Isolation Forest contamination (default 0.01)
 
-### Run tests
-- All tests: `python -m pytest -q`
-- Semantic mapping only: `python -m pytest -q src/tests/test_semantic_field_mapping.py`
+| Flag | Description |
+|------|-------------|
+| `--root PATH` | Folder to scan for CSV/Parquet |
+| `--refs a,b,c` | Reference fields for semantic mapping |
+| `--refs-file PATH` | YAML/JSON containing `reference_fields: [...]` |
+| `--synonyms-file PATH` | YAML/JSON dict of `{ field: [aliases...] }` |
+| `--threshold FLOAT` | Mapping acceptance cutoff (default 0.7) |
+| `--epsilon FLOAT` | Ambiguity window (default 0.05) |
+| `--use-zscore/--use-iqr/--use-isoforest` | Toggle detectors (default: all on) |
+| `--z-threshold FLOAT` | Z-Score threshold (default 3.0) |
+| `--contamination FLOAT` | Isolation Forest contamination (default 0.01) |
 
-### Notes on Lakehouse connections
-A stub `LakehouseSQLDataSource` is provided under `src/assistant/datasource.py`. Implement your
-connection and table iteration to fetch DataFrames from the lakehouse if needed.
+### Outputs
+
+- JSON report: `artifacts/assistant_report.json`
+- Anomaly samples: `artifacts/anomalies/`
+
+---
+
+## Running Tests
+
+```bash
+cd backend
+
+# All tests
+python -m pytest -q tests/
+
+# Semantic mapping only
+python -m pytest -q tests/test_semantic_field_mapping.py
+```
+
+---
+
+## Project Structure
+
+```
+lakehouse/
+├── backend/           # FastAPI backend + analysis engine
+│   ├── src/           # Source code (API, anomaly detection, schema, mapping)
+│   ├── tests/         # Unit & integration tests
+│   ├── scripts/       # CLI scripts & benchmarks
+│   └── configs/       # Configuration files
+├── frontend/          # React/Vite frontend
+├── test/              # Benchmarking infrastructure
+└── docker-compose.*.yml
+```
