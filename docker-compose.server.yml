@@ -24,7 +24,6 @@ services:
       - .env
     volumes:
       - ./backend/src:/app/src
-      - ./backend/lakehouse.log:/app/lakehouse.log
       - ./data:/app/data
       - ./backend/artifacts:/app/artifacts
     healthcheck:

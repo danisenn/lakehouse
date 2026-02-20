@@ -24,7 +24,6 @@ services:
       - .env
     volumes:
       - ./backend/src:/app/src
-      - ./backend/lakehouse.log:/app/lakehouse.log
       - ./backend/data:/app/data
       - ./backend/artifacts:/app/artifacts
     command: [ "uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
