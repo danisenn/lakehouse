@@ -17,7 +17,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - CORS_ORIGINS=http://localhost,http://localhost:8888
+      - CORS_ORIGINS=*
       - ARTIFACT_DIR=/app/artifacts
       - OLLAMA_HOST=http://ollama:11434
     env_file:
@@ -28,7 +28,7 @@ services:
       - ./data:/app/data
       - ./backend/artifacts:/app/artifacts
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8889/api/v1/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8889/api/v1/health" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -41,7 +41,8 @@ services:
     ports:
       - "8888:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: always
 
 volumes:
