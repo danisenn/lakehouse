@@ -89,7 +89,7 @@ def _detect_all_anomalies(
         adf.drop("row_idx").head(save_samples_limit).write_csv(out)
         return str(out)
 
-    if mapping_cfg.reference_fields and numeric_cols:
+    if numeric_cols:
         # Per-column methods
         if anomaly_cfg.use_zscore:
             total = 0
@@ -174,24 +174,9 @@ def _detect_all_anomalies(
         # If we have any anomalies, pick a few samples and ask LLM to explain
         try:
             anomaly_samples = []
-            # Try to get samples from saved files or re-detect small batch
-            # For simplicity, let's just grab from categorical if available, or isoforest
             if "categorical" in anomalies_counts and anomalies_counts["categorical"] > 0:
-                # We need to re-detect or keep the df in memory. 
-                # Since we called detect_categorical_anomalies above, let's use it.
-                # But wait, cat_anomalies is local scope.
-                # Let's just use the 'cat_anomalies' variable we just created.
                 if 'cat_anomalies' in locals() and not cat_anomalies.is_empty():
                      anomaly_samples.extend(cat_anomalies.head(3).to_dicts())
-        
-            if not anomaly_samples and "isolation_forest" in anomalies_counts and anomalies_counts["isolation_forest"] > 0:
-                 # Re-run iso forest on small scale or just skip? 
-                 # Ideally we should have kept the 'adf' from iso forest.
-                 # Let's assume 'adf' from the loop above is still accessible if it was the last one.
-                 # Actually, 'adf' is local to the loop. 
-                 # Let's just skip complex re-detection for now and focus on categorical which is fresh.
-                 pass
-
             if anomaly_samples:
                 llm = LLMClient()
                 explanation = llm.explain_anomalies(dataset_name, schema, anomaly_samples)
@@ -200,7 +185,7 @@ def _detect_all_anomalies(
         except Exception as e:
             logger.error(f"LLM Anomaly Explanation failed: {e}")
 
-        return anomalies_counts, anomalies_saved, anomalies_rows, anomalies_previews, anomaly_explanation
+    return anomalies_counts, anomalies_saved, anomalies_rows, anomalies_previews, anomaly_explanation
 
 def run_on_dataset(
     dataset: Dataset,

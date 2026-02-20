@@ -21,7 +21,7 @@ class DatasetReport(BaseModel):
     categorical_cols: List[str]
     llm_insights: Dict[str, Any]
     mapping: Dict
-    ambiguous: List[str]
+    ambiguous: Dict[str, Any]
     unmapped: List[str]
     anomalies: Dict[str, int]
     anomaly_samples_saved: Dict[str, Optional[str]]

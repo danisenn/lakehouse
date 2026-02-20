@@ -52,7 +52,7 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
     } else if (mode === 'single_table') {
         source = {
             type: 'sql',
-            query: `SELECT * FROM "${sqlSchema}"."${sqlTable}" LIMIT 100`,
+            query: `SELECT * FROM ${sqlSchema}."${sqlTable}" LIMIT 100`,
             max_rows: 100,
         };
     } else if (mode === 'all_tables') {
