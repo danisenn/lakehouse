@@ -6,9 +6,6 @@ from src.assistant.datasource import LakehouseSQLDataSource
 def test_schema_mode_table_discovery():
     """Test that schema mode discovers and fetches all tables."""
     
-    # Mock connection
-    mock_conn = MagicMock()
-    
     # Mock table discovery query result
     tables_df = pl.DataFrame({"TABLE_NAME": ["table1", "table2", "table3"]})
     
@@ -30,17 +27,18 @@ def test_schema_mode_table_discovery():
         else:
             raise ValueError(f"Unexpected query: {query}")
     
-    mock_conn.toPolars = mock_to_polars
-    
-    # Create datasource in schema mode
-    ds = LakehouseSQLDataSource(
-        connection_uri=mock_conn,
-        schema="lakehouse.datalake.raw",
-        max_rows=100
-    )
-    
-    # Collect datasets
-    datasets = list(ds.iter_datasets())
+    with patch("src.assistant.datasource.LakehouseSQLDataSource._execute_query") as mock_exec:
+        mock_exec.side_effect = mock_to_polars
+        
+        # Create datasource in schema mode
+        ds = LakehouseSQLDataSource(
+            connection_uri="mock_uri",
+            schema="lakehouse.datalake.raw",
+            max_rows=100
+        )
+        
+        # Collect datasets
+        datasets = list(ds.iter_datasets())
     
     # Verify
     assert len(datasets) == 3
@@ -54,15 +52,15 @@ def test_schema_mode_table_discovery():
 def test_schema_mode_discovery_error():
     """Test error handling when schema discovery fails."""
     
-    mock_conn = MagicMock()
-    mock_conn.toPolars.side_effect = Exception("Discovery failed")
-    
-    ds = LakehouseSQLDataSource(
-        connection_uri=mock_conn,
-        schema="bad.schema"
-    )
-    
-    datasets = list(ds.iter_datasets())
+    with patch("src.assistant.datasource.LakehouseSQLDataSource._execute_query") as mock_exec:
+        mock_exec.side_effect = Exception("Discovery failed")
+        
+        ds = LakehouseSQLDataSource(
+            connection_uri="mock_uri",
+            schema="bad.schema"
+        )
+        
+        datasets = list(ds.iter_datasets())
     
     assert len(datasets) == 1
     assert "discovery_error" in datasets[0].name

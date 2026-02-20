@@ -27,6 +27,11 @@ services:
       - ./backend/lakehouse.log:/app/lakehouse.log
       - ./data:/app/data
       - ./backend/artifacts:/app/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8889/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     depends_on:
       - ollama
     restart: always

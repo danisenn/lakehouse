@@ -25,6 +25,15 @@ class DatasetReport(BaseModel):
     unmapped: List[str]
     anomalies: Dict[str, int]
     anomaly_samples_saved: Dict[str, Optional[str]]
+    anomaly_rows: Optional[Dict[str, List[int]]] = None
+    anomaly_previews: Optional[Dict[str, List[Dict[str, Any]]]] = None
+
+class AssistantReport(BaseModel):
+    data_root: Optional[str]
+    datasets: List[DatasetReport]
+
+    def to_json(self) -> str:
+        return self.model_dump_json(indent=2)
 
 
 class AnomalyConfigModel(BaseModel):

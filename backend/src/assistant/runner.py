@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
 import polars as pl
+
+from src.utils.logger import logger
 
 from src.assistant.datasource import DataSource, Dataset
 from src.schema_recognition.inference import schema_inference
@@ -50,36 +52,7 @@ class MappingConfig:
     epsilon: float = 0.05
 
 
-@dataclass
-class DatasetReport:
-    name: str
-    path: Optional[str]
-    rows: int
-    cols: int
-    schema: Dict[str, str]
-    semantic_types: Dict[str, str]
-    statistics: Dict[str, Any]
-    semantic_types: Dict[str, str]
-    statistics: Dict[str, Any]
-    nested_structures: List[str]
-    categorical_cols: List[str]
-    llm_insights: Dict[str, Any]
-    mapping: Dict
-    ambiguous: List[str]
-    unmapped: List[str]
-    anomalies: Dict[str, int]  # method -> count
-    anomaly_samples_saved: Dict[str, Optional[str]]  # method -> path
-    anomaly_rows: Dict[str, List[int]]  # method -> list of row indices
-    anomaly_previews: Dict[str, List[Dict[str, Any]]] = None # method -> list of sample rows
-
-
-@dataclass
-class AssistantReport:
-    data_root: Optional[str]
-    datasets: List[DatasetReport]
-
-    def to_json(self) -> str:
-        return json.dumps(asdict(self), indent=2)
+from src.api.models import DatasetReport, AssistantReport
 
 
 def infer_schema(df: pl.DataFrame) -> Dict[str, str]:
@@ -87,6 +60,147 @@ def infer_schema(df: pl.DataFrame) -> Dict[str, str]:
     # We'll compute directly from df to avoid I/O.
     return {str(name): str(dtype) for name, dtype in df.schema.items()}
 
+
+from typing import Tuple, Any
+
+def _detect_all_anomalies(
+    dataset_name: str,
+    df_anom: pl.DataFrame,
+    schema: Dict[str, str],
+    mapping_cfg: MappingConfig,
+    anomaly_cfg: AnomalyConfig,
+    numeric_cols: List[str],
+    save_dir: Optional[Path],
+    save_samples_limit: int,
+) -> Tuple[Dict[str, int], Dict[str, Optional[str]], Dict[str, List[int]], Dict[str, List[Dict[str, Any]]], Optional[str]]:
+    # Anomaly detection
+    anomalies_counts: Dict[str, int] = {}
+    anomaly_explanation: Optional[str] = None
+    anomalies_saved: Dict[str, Optional[str]] = {}
+    anomalies_rows: Dict[str, List[int]] = {}
+    anomalies_previews: Dict[str, List[Dict[str, Any]]] = {}
+
+
+    def maybe_save(name: str, adf: pl.DataFrame) -> Optional[str]:
+        if save_dir is None or adf.is_empty():
+            return None
+        out = save_dir / f"{Path(dataset_name).as_posix().replace('/', '__')}__{name}.csv"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        adf.drop("row_idx").head(save_samples_limit).write_csv(out)
+        return str(out)
+
+    if mapping_cfg.reference_fields and numeric_cols:
+        # Per-column methods
+        if anomaly_cfg.use_zscore:
+            total = 0
+            for c in numeric_cols:
+                try:
+                    adf = detect_anomalies(df_anom, method="zscore", columns=[c], threshold=anomaly_cfg.z_threshold)
+                    total += adf.height
+                    if not adf.is_empty():
+                        current_rows = anomalies_rows.get("zscore", [])
+                        current_rows.extend(adf["row_idx"].to_list())
+                        anomalies_rows["zscore"] = sorted(list(set(current_rows)))
+                        if "zscore" not in anomalies_previews:
+                             anomalies_previews["zscore"] = adf.drop("row_idx").head(5).to_dicts()
+                except (pl.ComputeError, ValueError) as e:
+                    # Log error but continue with other columns
+                    logger.error(f"Error in Z-Score detection for column {c}: {e}")
+                    continue
+            anomalies_counts["zscore"] = total
+            anomalies_saved["zscore"] = None
+        if anomaly_cfg.use_iqr:
+            total = 0
+            for c in numeric_cols:
+                try:
+                    adf = detect_anomalies(df_anom, method="iqr", columns=[c])
+                    total += adf.height
+                    if not adf.is_empty():
+                        current_rows = anomalies_rows.get("iqr", [])
+                        current_rows.extend(adf["row_idx"].to_list())
+                        anomalies_rows["iqr"] = sorted(list(set(current_rows)))
+                        if "iqr" not in anomalies_previews:
+                             anomalies_previews["iqr"] = adf.drop("row_idx").head(5).to_dicts()
+                except (pl.ComputeError, ValueError) as e:
+                     logger.error(f"Error in IQR detection for column {c}: {e}")
+                     continue
+            anomalies_counts["iqr"] = total
+            anomalies_saved["iqr"] = None
+        # Multi-column Isolation Forest
+        if anomaly_cfg.use_isolation_forest and len(numeric_cols) >= 1:
+            try:
+                adf = detect_anomalies(
+                    df_anom,
+                    method="isolation_forest",
+                    columns=numeric_cols,
+                    contamination=anomaly_cfg.contamination,
+                    n_estimators=anomaly_cfg.n_estimators,
+                    random_state=anomaly_cfg.random_state,
+                )
+                anomalies_counts["isolation_forest"] = adf.height
+                if not adf.is_empty():
+                    anomalies_rows["isolation_forest"] = adf["row_idx"].to_list()
+                    anomalies_previews["isolation_forest"] = adf.drop("row_idx").head(5).to_dicts()
+                anomalies_saved["isolation_forest"] = maybe_save("isoforest", adf)
+            except (pl.ComputeError, ValueError, ImportError) as e:
+                logger.error(f"Error in Isolation Forest detection: {e}")
+                anomalies_counts["isolation_forest"] = 0
+                anomalies_saved["isolation_forest"] = None
+
+        # Categorical Anomalies
+        try:
+            cat_anomalies = detect_categorical_anomalies(df_anom)
+            if cat_anomalies.height > 0:
+                anomalies_counts["categorical"] = cat_anomalies.height
+                anomalies_rows["categorical"] = cat_anomalies["row_idx"].to_list()
+                anomalies_previews["categorical"] = cat_anomalies.drop("row_idx").head(5).to_dicts()
+                anomalies_saved["categorical"] = maybe_save("categorical", cat_anomalies)
+        except Exception as e:
+            logger.error(f"Error in Categorical Anomaly detection: {e}")
+
+        # Missing Value Anomalies
+        if anomaly_cfg.use_missing_values:
+            try:
+                missing_anomalies = detect_missing_value_anomalies(df_anom, threshold=anomaly_cfg.missing_threshold)
+                if missing_anomalies.height > 0:
+                    anomalies_counts["missing_values"] = missing_anomalies.height
+                    anomalies_rows["missing_values"] = missing_anomalies["row_idx"].to_list()
+                    anomalies_previews["missing_values"] = missing_anomalies.drop("row_idx").head(5).to_dicts()
+                    anomalies_saved["missing_values"] = maybe_save("missing_values", missing_anomalies)
+            except Exception as e:
+                logger.error(f"Error in Missing Value detection: {e}")
+
+        # LLM Anomaly Explanation
+        # If we have any anomalies, pick a few samples and ask LLM to explain
+        try:
+            anomaly_samples = []
+            # Try to get samples from saved files or re-detect small batch
+            # For simplicity, let's just grab from categorical if available, or isoforest
+            if "categorical" in anomalies_counts and anomalies_counts["categorical"] > 0:
+                # We need to re-detect or keep the df in memory. 
+                # Since we called detect_categorical_anomalies above, let's use it.
+                # But wait, cat_anomalies is local scope.
+                # Let's just use the 'cat_anomalies' variable we just created.
+                if 'cat_anomalies' in locals() and not cat_anomalies.is_empty():
+                     anomaly_samples.extend(cat_anomalies.head(3).to_dicts())
+        
+            if not anomaly_samples and "isolation_forest" in anomalies_counts and anomalies_counts["isolation_forest"] > 0:
+                 # Re-run iso forest on small scale or just skip? 
+                 # Ideally we should have kept the 'adf' from iso forest.
+                 # Let's assume 'adf' from the loop above is still accessible if it was the last one.
+                 # Actually, 'adf' is local to the loop. 
+                 # Let's just skip complex re-detection for now and focus on categorical which is fresh.
+                 pass
+
+            if anomaly_samples:
+                llm = LLMClient()
+                explanation = llm.explain_anomalies(dataset_name, schema, anomaly_samples)
+                if explanation:
+                    anomaly_explanation = explanation
+        except Exception as e:
+            logger.error(f"LLM Anomaly Explanation failed: {e}")
+
+        return anomalies_counts, anomalies_saved, anomalies_rows, anomalies_previews, anomaly_explanation
 
 def run_on_dataset(
     dataset: Dataset,
@@ -144,7 +258,7 @@ def run_on_dataset(
                     llm_insights["descriptions"][col] = desc
                     count += 1
     except Exception as e:
-        print(f"LLM Enrichment failed: {e}")
+        logger.error(f"LLM Enrichment failed: {e}")
 
     # Semantic mapping
     mapper = SemanticFieldMapper(
@@ -156,131 +270,25 @@ def run_on_dataset(
     mapping_result = mapper.map_columns(df)
 
     # Anomaly detection
-    anomalies_counts: Dict[str, int] = {}
-    anomalies_saved: Dict[str, Optional[str]] = {}
-    anomalies_rows: Dict[str, List[int]] = {}
-    anomalies_previews: Dict[str, List[Dict[str, Any]]] = {}
-
     numeric_cols = select_numeric_columns(df_anom, exclude=["row_idx"])
-
-    def maybe_save(name: str, adf: pl.DataFrame) -> Optional[str]:
-        if save_dir is None or adf.is_empty():
-            return None
-        out = save_dir / f"{Path(dataset.name).as_posix().replace('/', '__')}__{name}.csv"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        adf.drop("row_idx").head(save_samples_limit).write_csv(out)
-        return str(out)
-
-    if mapping_cfg.reference_fields and numeric_cols:
-        # Per-column methods
-        if anomaly_cfg.use_zscore:
-            total = 0
-            for c in numeric_cols:
-                try:
-                    adf = detect_anomalies(df_anom, method="zscore", columns=[c], threshold=anomaly_cfg.z_threshold)
-                    total += adf.height
-                    if not adf.is_empty():
-                        current_rows = anomalies_rows.get("zscore", [])
-                        current_rows.extend(adf["row_idx"].to_list())
-                        anomalies_rows["zscore"] = sorted(list(set(current_rows)))
-                        if "zscore" not in anomalies_previews:
-                             anomalies_previews["zscore"] = adf.drop("row_idx").head(5).to_dicts()
-                except (pl.ComputeError, ValueError) as e:
-                    # Log error but continue with other columns
-                    print(f"Error in Z-Score detection for column {c}: {e}")
-                    continue
-            anomalies_counts["zscore"] = total
-            anomalies_saved["zscore"] = None
-        if anomaly_cfg.use_iqr:
-            total = 0
-            for c in numeric_cols:
-                try:
-                    adf = detect_anomalies(df_anom, method="iqr", columns=[c])
-                    total += adf.height
-                    if not adf.is_empty():
-                        current_rows = anomalies_rows.get("iqr", [])
-                        current_rows.extend(adf["row_idx"].to_list())
-                        anomalies_rows["iqr"] = sorted(list(set(current_rows)))
-                        if "iqr" not in anomalies_previews:
-                             anomalies_previews["iqr"] = adf.drop("row_idx").head(5).to_dicts()
-                except (pl.ComputeError, ValueError) as e:
-                     print(f"Error in IQR detection for column {c}: {e}")
-                     continue
-            anomalies_counts["iqr"] = total
-            anomalies_saved["iqr"] = None
-        # Multi-column Isolation Forest
-        if anomaly_cfg.use_isolation_forest and len(numeric_cols) >= 1:
-            try:
-                adf = detect_anomalies(
-                    df_anom,
-                    method="isolation_forest",
-                    columns=numeric_cols,
-                    contamination=anomaly_cfg.contamination,
-                    n_estimators=anomaly_cfg.n_estimators,
-                    random_state=anomaly_cfg.random_state,
-                )
-                anomalies_counts["isolation_forest"] = adf.height
-                if not adf.is_empty():
-                    anomalies_rows["isolation_forest"] = adf["row_idx"].to_list()
-                    anomalies_previews["isolation_forest"] = adf.drop("row_idx").head(5).to_dicts()
-                anomalies_saved["isolation_forest"] = maybe_save("isoforest", adf)
-            except (pl.ComputeError, ValueError, ImportError) as e:
-                print(f"Error in Isolation Forest detection: {e}")
-                anomalies_counts["isolation_forest"] = 0
-                anomalies_saved["isolation_forest"] = None
-
-        # Categorical Anomalies
-        try:
-            cat_anomalies = detect_categorical_anomalies(df_anom)
-            if cat_anomalies.height > 0:
-                anomalies_counts["categorical"] = cat_anomalies.height
-                anomalies_rows["categorical"] = cat_anomalies["row_idx"].to_list()
-                anomalies_previews["categorical"] = cat_anomalies.drop("row_idx").head(5).to_dicts()
-                anomalies_saved["categorical"] = maybe_save("categorical", cat_anomalies)
-        except Exception as e:
-            print(f"Error in Categorical Anomaly detection: {e}")
-
-        # Missing Value Anomalies
-        if anomaly_cfg.use_missing_values:
-            try:
-                missing_anomalies = detect_missing_value_anomalies(df_anom, threshold=anomaly_cfg.missing_threshold)
-                if missing_anomalies.height > 0:
-                    anomalies_counts["missing_values"] = missing_anomalies.height
-                    anomalies_rows["missing_values"] = missing_anomalies["row_idx"].to_list()
-                    anomalies_previews["missing_values"] = missing_anomalies.drop("row_idx").head(5).to_dicts()
-                    anomalies_saved["missing_values"] = maybe_save("missing_values", missing_anomalies)
-            except Exception as e:
-                print(f"Error in Missing Value detection: {e}")
-
-        # LLM Anomaly Explanation
-        # If we have any anomalies, pick a few samples and ask LLM to explain
-        try:
-            anomaly_samples = []
-            # Try to get samples from saved files or re-detect small batch
-            # For simplicity, let's just grab from categorical if available, or isoforest
-            if "categorical" in anomalies_counts and anomalies_counts["categorical"] > 0:
-                # We need to re-detect or keep the df in memory. 
-                # Since we called detect_categorical_anomalies above, let's use it.
-                # But wait, cat_anomalies is local scope.
-                # Let's just use the 'cat_anomalies' variable we just created.
-                if 'cat_anomalies' in locals() and not cat_anomalies.is_empty():
-                     anomaly_samples.extend(cat_anomalies.head(3).to_dicts())
-            
-            if not anomaly_samples and "isolation_forest" in anomalies_counts and anomalies_counts["isolation_forest"] > 0:
-                 # Re-run iso forest on small scale or just skip? 
-                 # Ideally we should have kept the 'adf' from iso forest.
-                 # Let's assume 'adf' from the loop above is still accessible if it was the last one.
-                 # Actually, 'adf' is local to the loop. 
-                 # Let's just skip complex re-detection for now and focus on categorical which is fresh.
-                 pass
-
-            if anomaly_samples:
-                llm = LLMClient()
-                explanation = llm.explain_anomalies(dataset.name, schema, anomaly_samples)
-                if explanation:
-                    llm_insights["anomaly_explanation"] = explanation
-        except Exception as e:
-            print(f"LLM Anomaly Explanation failed: {e}")
+    (
+        anomalies_counts,
+        anomalies_saved,
+        anomalies_rows,
+        anomalies_previews,
+        anomaly_explanation,
+    ) = _detect_all_anomalies(
+        dataset_name=dataset.name,
+        df_anom=df_anom,
+        schema=schema,
+        mapping_cfg=mapping_cfg,
+        anomaly_cfg=anomaly_cfg,
+        numeric_cols=numeric_cols,
+        save_dir=save_dir,
+        save_samples_limit=save_samples_limit,
+    )
+    if anomaly_explanation:
+        llm_insights["anomaly_explanation"] = anomaly_explanation
 
     return DatasetReport(
         name=dataset.name,

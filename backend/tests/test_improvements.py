@@ -5,9 +5,9 @@ from src.assistant.datasource import LakehouseSQLDataSource, LocalFilesDataSourc
 from src.schema_recognition.inference.schema_inference import infer_schema_from_csv
 
 def test_lakehouse_datasource():
-    with patch("polars.read_database") as mock_read_db:
+    with patch("src.assistant.datasource.LakehouseSQLDataSource._execute_query") as mock_exec:
         mock_df = pl.DataFrame({"a": [1, 2], "b": [3, 4]})
-        mock_read_db.return_value = mock_df
+        mock_exec.return_value = mock_df
         
         ds = LakehouseSQLDataSource(connection_uri="sqlite:///:memory:", query="SELECT * FROM table")
         datasets = list(ds.iter_datasets())
@@ -15,11 +15,11 @@ def test_lakehouse_datasource():
         assert len(datasets) == 1
         assert datasets[0].name == "lakehouse_query"
         assert datasets[0].df.height == 2
-        mock_read_db.assert_called_once()
+        mock_exec.assert_called_once()
 
 def test_lakehouse_datasource_error():
-    with patch("polars.read_database") as mock_read_db:
-        mock_read_db.side_effect = Exception("Connection failed")
+    with patch("src.assistant.datasource.LakehouseSQLDataSource._execute_query") as mock_exec:
+        mock_exec.side_effect = Exception("Connection failed")
         
         ds = LakehouseSQLDataSource(connection_uri="bad_uri", query="SELECT * FROM table")
         datasets = list(ds.iter_datasets())

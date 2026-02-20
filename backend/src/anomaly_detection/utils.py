@@ -11,9 +11,9 @@ Method = Literal["zscore", "iqr", "isolation_forest"]
 
 def select_numeric_columns(df: pl.DataFrame, exclude: Optional[Sequence[str]] = None) -> List[str]:
     """
-    Wählt numerische Spalten aus einem Polars-DataFrame aus.
+    Selects numeric columns from a Polars DataFrame.
 
-    - exclude: optionale Liste von Spalten, die ausgeschlossen werden sollen.
+    - exclude: optional list of columns to be excluded.
     """
     exclude = set(exclude or [])
     numeric_dtypes = {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64, pl.Float32, pl.Float64}
@@ -24,7 +24,7 @@ def select_numeric_columns(df: pl.DataFrame, exclude: Optional[Sequence[str]] = 
 def ensure_columns_exist(df: pl.DataFrame, columns: Sequence[str]) -> None:
     missing = [c for c in columns if c not in df.columns]
     if missing:
-        raise KeyError(f"Spalten fehlen im DataFrame: {missing}")
+        raise KeyError(f"Columns missing in DataFrame: {missing}")
 
 
 def detect_anomalies(
@@ -37,19 +37,19 @@ def detect_anomalies(
     random_state: int = 42,
 ) -> pl.DataFrame:
     """
-    Führt Anomalieerkennung auf dem gegebenen DataFrame durch und gibt die als Ausreißer
-    erkannten Zeilen zurück.
+    Performs anomaly detection on the given DataFrame and returns the rows
+    identified as outliers.
+    
+    Parameters per method:
+    - method="zscore": uses a single column and the Z-Score `threshold`.
+    - method="iqr": uses a single column (Interquartile Range Rule).
+    - method="isolation_forest": uses multiple columns and parameters `contamination`, `n_estimators`, `random_state`.
 
-    Parameter je Methode:
-    - method="zscore": nutzt eine einzelne Spalte und den Z-Score-Schwellenwert `threshold`.
-    - method="iqr": nutzt eine einzelne Spalte (Interquartilsabstand-Regel).
-    - method="isolation_forest": nutzt mehrere Spalten und Parameter `contamination`, `n_estimators`, `random_state`.
-
-    Rückgabe: DataFrame mit den Zeilen, die als Anomalien markiert wurden.
+    Returns: DataFrame with the rows marked as anomalies.
     """
     if method in ("zscore", "iqr"):
         if not columns or len(columns) != 1:
-            raise ValueError("Für method='zscore' oder 'iqr' muss genau eine Spalte angegeben werden (columns=[...]).")
+            raise ValueError("For method='zscore' or 'iqr', exactly one column must be specified (columns=[...]).")
         col = columns[0]
         if method == "zscore":
             return z_score_anomalies(df, col, threshold=threshold)
@@ -58,7 +58,7 @@ def detect_anomalies(
 
     if method == "isolation_forest":
         if not columns or len(columns) < 1:
-            # Fallback: automatisch numerische Spalten wählen
+            # Fallback: automatically select numeric columns
             columns = select_numeric_columns(df)
         ensure_columns_exist(df, columns)
         return isolation_forest_anomalies(
@@ -69,7 +69,7 @@ def detect_anomalies(
             random_state=random_state,
         )
 
-    raise ValueError(f"Unbekannte Methode: {method}. Erlaubt sind 'zscore', 'iqr', 'isolation_forest'.")
+    raise ValueError(f"Unknown method: {method}. Allowed methods are 'zscore', 'iqr', 'isolation_forest'.")
 
 
 __all__ = [

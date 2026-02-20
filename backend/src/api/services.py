@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
-from src.assistant.runner import run_assistant, MappingConfig, AnomalyConfig, AssistantReport
+from src.assistant.runner import run_assistant, MappingConfig, AnomalyConfig
+from src.api.models import AssistantReport
 from src.assistant.datasource import LocalFilesDataSource
 
 # Base artifacts directory (can be overridden with env)

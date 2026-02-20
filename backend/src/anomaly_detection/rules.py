@@ -12,7 +12,7 @@ def z_score_anomalies(df: pl.DataFrame, column: str, threshold: float = 3.0) -> 
     - Handles NaN values robustly (ignored in mean/std calculation; NaN remains non-anomaly).
     """
     if column not in df.columns:
-        raise KeyError(f"Spalte '{column}' existiert nicht im DataFrame.")
+        raise KeyError(f"Column '{column}' does not exist in the DataFrame.")
 
     values = df[column].to_numpy()
     # Robuste Statistik mit NaN-Handling
@@ -35,7 +35,7 @@ def iqr_anomalies(df: pl.DataFrame, column: str) -> pl.DataFrame:
     - NaN values are ignored.
     """
     if column not in df.columns:
-        raise KeyError(f"Spalte '{column}' existiert nicht im DataFrame.")
+        raise KeyError(f"Column '{column}' does not exist in the DataFrame.")
 
     values = df[column].to_numpy()
     # Falls alles NaN oder leer

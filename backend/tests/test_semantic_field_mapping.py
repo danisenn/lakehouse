@@ -1,7 +1,7 @@
 import pytest
 import polars as pl
 
-from ..semantic_field_mapping import SemanticFieldMapper, map_columns
+from src.semantic_field_mapping.mapper import SemanticFieldMapper, map_columns
 
 
 def test_exact_case_insensitive_match():

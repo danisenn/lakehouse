@@ -6,7 +6,7 @@ def get_connection():
     # Dremio connection details for ADBC Flight SQL
     user = os.getenv('DREMIO_USER')
     password = os.getenv('DREMIO_PASSWORD')
-    host = os.getenv('DREMIO_HOST', '10.28.1.180')
+    host = os.getenv('DREMIO_HOST', 'host.docker.internal')
     port = os.getenv('DREMIO_PORT', '32010')
     
     # Return connection string for ADBC Flight SQL

@@ -3,6 +3,8 @@ import json
 import os
 from typing import List, Dict, Optional, Any
 
+from src.utils.logger import logger
+
 class LLMClient:
     """
     Client for interacting with a local Ollama instance.
@@ -31,7 +33,7 @@ class LLMClient:
             response.raise_for_status()
             return response.json().get("response", "").strip()
         except Exception as e:
-            print(f"LLM Generation Error: {e}")
+            logger.error(f"LLM Generation Error: {e}")
             return None
 
     def generate_column_description(self, col_name: str, sample_values: List[Any]) -> Optional[str]:

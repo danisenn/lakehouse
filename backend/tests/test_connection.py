@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path so we can import connection module
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from connection.connection import get_connection
+from src.connection.connection import get_connection
 import polars as pl
 
 

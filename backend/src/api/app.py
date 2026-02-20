@@ -110,9 +110,8 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
                 mapping=mapping,
                 anomaly=anomaly,
             )
-            # Convert dataclass to dict for JSON serialization
-            from dataclasses import asdict
-            return asdict(report)
+            # Convert pydantic model to dict for JSON serialization
+            return report.model_dump()
         except Exception as e:
             from src.utils.logger import logger
             logger.error(f"Run failed: {e}", exc_info=True)
