@@ -110,7 +110,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
 
                         <TabsContent value="datasets" className="space-y-4 mt-4">
                             {report.datasets.map((dataset, idx) => (
-                                <div key={idx} className="p-4 rounded-lg border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors">
+                                <div key={idx} className="p-4 rounded-lg border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors resize-x max-w-full overflow-hidden">
                                     <div
                                         className="flex items-start justify-between mb-4 cursor-pointer select-none"
                                         onClick={() => toggleDataset(idx)}
