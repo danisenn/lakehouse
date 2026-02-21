@@ -238,15 +238,11 @@ def run_on_dataset(
         llm_insights["summary"] = llm.summarize_table(dataset.name, schema, sample_rows)
         
         # Generate descriptions for a few interesting columns (limit to avoid slow response)
-        # Prioritize columns that are NOT mapped and NOT simple types
-        count = 0
         for col in df.columns:
-            if count >= 5: break # Limit to 5 columns for now
             if col not in semantic_types:
                 desc = llm.generate_column_description(col, df[col].head(5).to_list())
                 if desc:
                     llm_insights["descriptions"][col] = desc
-                    count += 1
     except Exception as e:
         logger.error(f"LLM Enrichment failed: {e}")
 

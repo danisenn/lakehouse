@@ -47,26 +47,26 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
         source = {
             type: 'local',
             root: 'data',
-            max_rows: 100,
+            max_rows: undefined,
         };
     } else if (mode === 'single_table') {
         source = {
             type: 'sql',
             query: `SELECT * FROM ${sqlSchema}."${sqlTable}" LIMIT 100`,
-            max_rows: 100,
+            max_rows: undefined,
         };
     } else if (mode === 'all_tables') {
         source = {
             type: 'sql',
             schema: sqlSchema,
-            max_rows: 100,
+            max_rows: undefined,
         };
     } else {
         // custom_query
         source = {
             type: 'sql',
             query: customQuery,
-            max_rows: 100,
+            max_rows: undefined,
         };
     }
 
