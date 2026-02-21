@@ -6,6 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
 import { Badge } from './ui/Badge';
 import { InfoTooltip } from './ui/InfoTooltip';
 
+const ANOMALY_TOOLTIPS: Record<string, string> = {
+    zscore: 'Z-Score Analysis: Flags individual numeric values that deviate extremely far (typically > 3 standard deviations) from the column mean.',
+    iqr: 'Interquartile Range (IQR): Flags numeric values that fall exceptionally far outside the normal middle 50% distribution of the column.',
+    isolation_forest: 'Isolation Forest: A machine learning model that flags entire rows containing unusual combinations of values across multiple numeric columns.',
+    categorical: 'Categorical Frequency: Flags rows containing extremely rare text categories or misspelled values that appear in a tiny fraction of the dataset.',
+    missing_values: 'Missing Data: Flags rows that contain an unusually high proportion of entirely empty or null values across their columns.',
+};
+
 export default function ReportViewer({ report }: { report: AssistantReport | null }) {
     const [expandedDatasets, setExpandedDatasets] = useState<Record<number, boolean>>({});
 
@@ -277,7 +285,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                                 <div key={method} className="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
                                                     <div className="text-xs text-gray-400 uppercase mb-1 flex items-center gap-1">
                                                         {method}
-                                                        <InfoTooltip content={`Anomaly detection method: ${method}`} />
+                                                        <InfoTooltip content={ANOMALY_TOOLTIPS[method.toLowerCase()] || `Anomaly detection method: ${method}`} />
                                                     </div>
                                                     <div className="text-2xl font-bold text-red-400">{count}</div>
                                                     {dataset.anomaly_rows?.[method] && dataset.anomaly_rows[method].length > 0 && (

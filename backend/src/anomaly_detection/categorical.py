@@ -9,12 +9,19 @@ def detect_categorical_anomalies(df: pl.DataFrame, threshold: float = 0.01) -> p
     """
     anomalous_indices = set()
     
+    total_rows = df.height
+    if total_rows == 0:
+        return df.head(0)
+        
+    # A column is categorical if it has a low number of unique values.
+    # We ignore columns where every value is unique (like Order_ID) or highly diverse text.
+    max_unique_threshold = min(100, max(2, total_rows * 0.1))
+
     # Identify categorical columns (string or low-cardinality integers)
     cat_cols = [
         col for col in df.columns 
-        if df[col].dtype == pl.Utf8 or (
-            df[col].dtype in (pl.Int8, pl.Int16, pl.Int32, pl.Int64) and df[col].n_unique() < 100
-        )
+        if (df[col].dtype == pl.Utf8 or df[col].dtype in (pl.Int8, pl.Int16, pl.Int32, pl.Int64)) 
+        and df[col].n_unique() <= max_unique_threshold
     ]
     
     total_rows = df.height
