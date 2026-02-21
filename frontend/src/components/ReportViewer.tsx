@@ -1,4 +1,5 @@
-import { BarChart, FileText, AlertTriangle, CheckCircle, Database } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart, FileText, AlertTriangle, CheckCircle, Database, ChevronDown, ChevronRight } from 'lucide-react';
 import type { AssistantReport } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
@@ -6,6 +7,12 @@ import { Badge } from './ui/Badge';
 import { InfoTooltip } from './ui/InfoTooltip';
 
 export default function ReportViewer({ report }: { report: AssistantReport | null }) {
+    const [expandedDatasets, setExpandedDatasets] = useState<Record<number, boolean>>({});
+
+    const toggleDataset = (idx: number) => {
+        setExpandedDatasets(prev => ({ ...prev, [idx]: !prev[idx] }));
+    };
+
     if (!report) {
         return (
             <Card className="h-full flex items-center justify-center bg-gray-900/50 border-gray-800 border-dashed">
@@ -104,15 +111,19 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                         <TabsContent value="datasets" className="space-y-4 mt-4">
                             {report.datasets.map((dataset, idx) => (
                                 <div key={idx} className="p-4 rounded-lg border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors">
-                                    <div className="flex items-start justify-between mb-4">
+                                    <div
+                                        className="flex items-start justify-between mb-4 cursor-pointer select-none"
+                                        onClick={() => toggleDataset(idx)}
+                                    >
                                         <div>
                                             <h4 className="font-semibold text-lg flex items-center gap-2">
+                                                {expandedDatasets[idx] ? <ChevronDown className="h-5 w-5 text-gray-400" /> : <ChevronRight className="h-5 w-5 text-gray-400" />}
                                                 {dataset.name}
                                                 <Badge variant="outline" className="text-xs font-normal">
                                                     {dataset.rows} rows
                                                 </Badge>
                                             </h4>
-                                            <p className="text-sm text-gray-400 font-mono mt-1">{dataset.path}</p>
+                                            <p className="text-sm text-gray-400 font-mono mt-1 ml-7">{dataset.path}</p>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-sm font-medium text-gray-300 flex items-center justify-end gap-1">
@@ -125,119 +136,124 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                         </div>
                                     </div>
 
-                                    {/* LLM Summary */}
-                                    {dataset.llm_insights?.summary && (
-                                        <div className="mb-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-sm text-blue-200">
-                                            <span className="font-semibold mr-2">✨ AI Summary:</span>
-                                            {dataset.llm_insights.summary}
-                                        </div>
-                                    )}
+                                    {expandedDatasets[idx] && (
+                                        <>
 
-                                    {/* Column Analysis Table */}
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left text-gray-400">
-                                            <thead className="text-xs text-gray-500 uppercase bg-gray-800/50">
-                                                <tr>
-                                                    <th className="px-4 py-2 rounded-tl-lg">Column</th>
-                                                    <th className="px-4 py-2">
-                                                        <div className="flex items-center gap-1">
-                                                            Description
-                                                            <InfoTooltip content="AI-generated description based on column name and data samples." />
-                                                        </div>
-                                                    </th>
-                                                    <th className="px-4 py-2">Type</th>
-                                                    <th className="px-4 py-2">
-                                                        <div className="flex items-center gap-1">
-                                                            Semantic
-                                                            <InfoTooltip content="Inferred semantic type (e.g., Phone, Email, Currency) to help with standardization." />
-                                                        </div>
-                                                    </th>
-                                                    <th className="px-4 py-2">
-                                                        <div className="flex items-center gap-1">
-                                                            Completeness
-                                                            <InfoTooltip content="Percentage of non-null values. Red/Yellow indicates high missing data." />
-                                                        </div>
+                                            {/* LLM Summary */}
+                                            {dataset.llm_insights?.summary && (
+                                                <div className="mb-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg text-sm text-blue-200">
+                                                    <span className="font-semibold mr-2">✨ AI Summary:</span>
+                                                    {dataset.llm_insights.summary}
+                                                </div>
+                                            )}
 
-                                                    </th>
-                                                    <th className="px-4 py-2 rounded-tr-lg">
-                                                        <div className="flex items-center gap-1">
-                                                            Mapping
-                                                            <InfoTooltip content="Target field this column is mapped to for downstream processing." />
-                                                        </div>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {Object.entries(dataset.schema).map(([col, dtype]) => {
-                                                    const semantic = dataset.semantic_types?.[col];
-                                                    const missing = dataset.statistics?.missing_ratios?.[col] || 0;
-                                                    const isNested = dataset.nested_structures?.includes(col);
-                                                    const isCategorical = dataset.categorical_cols?.includes(col);
-                                                    const mapping = dataset.mapping[col];
-                                                    const description = dataset.llm_insights?.descriptions?.[col];
-
-                                                    // Stats
-                                                    const numStats = dataset.statistics?.numeric_stats?.[col];
-                                                    const textStats = dataset.statistics?.text_stats?.[col];
-
-                                                    return (
-                                                        <tr key={col} className="border-b border-gray-800 hover:bg-gray-800/30">
-                                                            <td className="px-4 py-2 font-medium text-gray-300">
-                                                                <div className="flex items-center gap-2">
-                                                                    {col}
-                                                                    {isNested && <Badge variant="outline" className="text-[10px] px-1 py-0 border-yellow-600 text-yellow-500">Nested</Badge>}
-                                                                    {isCategorical && <Badge variant="outline" className="text-[10px] px-1 py-0 border-purple-600 text-purple-400">Categorical</Badge>}
+                                            {/* Column Analysis Table */}
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm text-left text-gray-400">
+                                                    <thead className="text-xs text-gray-500 uppercase bg-gray-800/50">
+                                                        <tr>
+                                                            <th className="px-4 py-2 rounded-tl-lg">Column</th>
+                                                            <th className="px-4 py-2">
+                                                                <div className="flex items-center gap-1">
+                                                                    Description
+                                                                    <InfoTooltip content="AI-generated description based on column name and data samples." />
                                                                 </div>
-                                                                {/* Detailed Stats Display */}
-                                                                {numStats && (
-                                                                    <div className="text-[10px] text-gray-500 mt-1 font-mono">
-                                                                        μ:{numStats.mean.toFixed(2)} min:{numStats.min} max:{numStats.max}
-                                                                    </div>
-                                                                )}
-                                                                {textStats && (
-                                                                    <div className="text-[10px] text-gray-500 mt-1 font-mono">
-                                                                        {textStats.unique_count} unique values
-                                                                    </div>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-xs text-gray-400 italic max-w-xs truncate">
-                                                                {description || <span className="text-gray-600">-</span>}
-                                                            </td>
-                                                            <td className="px-4 py-2 font-mono text-xs">
-                                                                {formatType(dtype)}
-                                                            </td>
-                                                            <td className="px-4 py-2">
-                                                                {semantic && <Badge variant="success" className="text-[10px] bg-green-900/30 text-green-400 border-green-800">{semantic}</Badge>}
-                                                            </td>
-                                                            <td className="px-4 py-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                                                                        <div
-                                                                            className={`h-full rounded-full ${missing > 0.5 ? 'bg-red-500' : missing > 0.1 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                                                                            style={{ width: `${(1 - missing) * 100}%` }}
-                                                                        />
-                                                                    </div>
-                                                                    <span className="text-xs">{Math.round((1 - missing) * 100)}%</span>
+                                                            </th>
+                                                            <th className="px-4 py-2">Type</th>
+                                                            <th className="px-4 py-2">
+                                                                <div className="flex items-center gap-1">
+                                                                    Semantic
+                                                                    <InfoTooltip content="Inferred semantic type (e.g., Phone, Email, Currency) to help with standardization." />
                                                                 </div>
-                                                            </td>
-                                                            <td className="px-4 py-2">
-                                                                {mapping ? (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <span className="text-gray-500">→</span>
-                                                                        <Badge variant="secondary" className="text-xs">
-                                                                            {typeof mapping === 'object' ? mapping.target : mapping}
-                                                                        </Badge>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-gray-600">-</span>
-                                                                )}
-                                                            </td>
+                                                            </th>
+                                                            <th className="px-4 py-2">
+                                                                <div className="flex items-center gap-1">
+                                                                    Completeness
+                                                                    <InfoTooltip content="Percentage of non-null values. Red/Yellow indicates high missing data." />
+                                                                </div>
+
+                                                            </th>
+                                                            <th className="px-4 py-2 rounded-tr-lg">
+                                                                <div className="flex items-center gap-1">
+                                                                    Mapping
+                                                                    <InfoTooltip content="Target field this column is mapped to for downstream processing." />
+                                                                </div>
+                                                            </th>
                                                         </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        {Object.entries(dataset.schema).map(([col, dtype]) => {
+                                                            const semantic = dataset.semantic_types?.[col];
+                                                            const missing = dataset.statistics?.missing_ratios?.[col] || 0;
+                                                            const isNested = dataset.nested_structures?.includes(col);
+                                                            const isCategorical = dataset.categorical_cols?.includes(col);
+                                                            const mapping = dataset.mapping[col];
+                                                            const description = dataset.llm_insights?.descriptions?.[col];
+
+                                                            // Stats
+                                                            const numStats = dataset.statistics?.numeric_stats?.[col];
+                                                            const textStats = dataset.statistics?.text_stats?.[col];
+
+                                                            return (
+                                                                <tr key={col} className="border-b border-gray-800 hover:bg-gray-800/30">
+                                                                    <td className="px-4 py-2 font-medium text-gray-300">
+                                                                        <div className="flex items-center gap-2">
+                                                                            {col}
+                                                                            {isNested && <Badge variant="outline" className="text-[10px] px-1 py-0 border-yellow-600 text-yellow-500">Nested</Badge>}
+                                                                            {isCategorical && <Badge variant="outline" className="text-[10px] px-1 py-0 border-purple-600 text-purple-400">Categorical</Badge>}
+                                                                        </div>
+                                                                        {/* Detailed Stats Display */}
+                                                                        {numStats && (
+                                                                            <div className="text-[10px] text-gray-500 mt-1 font-mono">
+                                                                                μ:{numStats.mean.toFixed(2)} min:{numStats.min} max:{numStats.max}
+                                                                            </div>
+                                                                        )}
+                                                                        {textStats && (
+                                                                            <div className="text-[10px] text-gray-500 mt-1 font-mono">
+                                                                                {textStats.unique_count} unique values
+                                                                            </div>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-xs text-gray-400 italic max-w-xs truncate">
+                                                                        {description || <span className="text-gray-600">-</span>}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 font-mono text-xs">
+                                                                        {formatType(dtype)}
+                                                                    </td>
+                                                                    <td className="px-4 py-2">
+                                                                        {semantic && <Badge variant="success" className="text-[10px] bg-green-900/30 text-green-400 border-green-800">{semantic}</Badge>}
+                                                                    </td>
+                                                                    <td className="px-4 py-2">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                                                                <div
+                                                                                    className={`h-full rounded-full ${missing > 0.5 ? 'bg-red-500' : missing > 0.1 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                                                                                    style={{ width: `${(1 - missing) * 100}%` }}
+                                                                                />
+                                                                            </div>
+                                                                            <span className="text-xs">{Math.round((1 - missing) * 100)}%</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-2">
+                                                                        {mapping ? (
+                                                                            <div className="flex items-center gap-1">
+                                                                                <span className="text-gray-500">→</span>
+                                                                                <Badge variant="secondary" className="text-xs">
+                                                                                    {typeof mapping === 'object' ? mapping.target : mapping}
+                                                                                </Badge>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-gray-600">-</span>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             ))}
                         </TabsContent>

@@ -15,11 +15,12 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
     const [loading, setLoading] = useState(false);
     const [refFields, setRefFields] = useState('label,title,text');
     const [threshold, setThreshold] = useState(0.7);
+    const [limitRows, setLimitRows] = useState(true);
 
     // State for SQL modes
     const [sqlSchema, setSqlSchema] = useState('lakehouse.datalake.raw');
     const [sqlTable, setSqlTable] = useState('SF_incidents2016.json');
-    const [customQuery, setCustomQuery] = useState('SELECT * FROM "Samples"."samples.dremio.com"."SF_incidents2016.json" LIMIT 10');
+    const [customQuery, setCustomQuery] = useState('SELECT * FROM "Samples"."samples.dremio.com"."SF_incidents2016.json"');
     const [availableTables, setAvailableTables] = useState<string[]>([]);
 
     // Fetch tables when schema changes
@@ -47,26 +48,26 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
         source = {
             type: 'local',
             root: 'data',
-            max_rows: undefined,
+            max_rows: limitRows ? 100 : undefined,
         };
     } else if (mode === 'single_table') {
         source = {
             type: 'sql',
-            query: `SELECT * FROM ${sqlSchema}."${sqlTable}" LIMIT 100`,
-            max_rows: undefined,
+            query: `SELECT * FROM ${sqlSchema}."${sqlTable}"`,
+            max_rows: limitRows ? 100 : undefined,
         };
     } else if (mode === 'all_tables') {
         source = {
             type: 'sql',
             schema: sqlSchema,
-            max_rows: undefined,
+            max_rows: limitRows ? 100 : undefined,
         };
     } else {
         // custom_query
         source = {
             type: 'sql',
             query: customQuery,
-            max_rows: undefined,
+            max_rows: limitRows ? 100 : undefined,
         };
     }
 
@@ -204,6 +205,27 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                         placeholder="label,title,text"
                     />
                     <p className="text-xs text-gray-500">Comma-separated list of fields to map against.</p>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-900/50 border border-gray-800 rounded-lg">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <Database className="h-4 w-4 text-blue-500" />
+                            Limit Analysis to First 100 Rows
+                        </label>
+                        <p className="text-xs text-gray-500">
+                            Drastically speeds up processing. Disable to analyze the entire dataset.
+                        </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={limitRows}
+                            onChange={(e) => setLimitRows(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
 
                 <div className="space-y-4 pt-2">
