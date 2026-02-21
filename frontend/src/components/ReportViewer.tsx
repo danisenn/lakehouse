@@ -110,7 +110,7 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
 
                         <TabsContent value="datasets" className="space-y-4 mt-4">
                             {report.datasets.map((dataset, idx) => (
-                                <div key={idx} className="p-4 rounded-lg border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors resize-x max-w-full overflow-hidden">
+                                <div key={idx} className="p-4 rounded-lg border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors">
                                     <div
                                         className="flex items-start justify-between mb-4 cursor-pointer select-none"
                                         onClick={() => toggleDataset(idx)}
@@ -148,32 +148,32 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
                                             )}
 
                                             {/* Column Analysis Table */}
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-sm text-left text-gray-400">
+                                            <div className="w-full">
+                                                <table className="w-full text-sm text-left text-gray-400 table-fixed">
                                                     <thead className="text-xs text-gray-500 uppercase bg-gray-800/50">
                                                         <tr>
-                                                            <th className="px-4 py-2 rounded-tl-lg">Column</th>
-                                                            <th className="px-4 py-2">
+                                                            <th className="px-4 py-2 rounded-tl-lg w-[20%]">Column</th>
+                                                            <th className="px-4 py-2 w-[25%]">
                                                                 <div className="flex items-center gap-1">
                                                                     Description
                                                                     <InfoTooltip content="AI-generated description based on column name and data samples." />
                                                                 </div>
                                                             </th>
-                                                            <th className="px-4 py-2">Type</th>
-                                                            <th className="px-4 py-2">
+                                                            <th className="px-4 py-2 w-[10%]">Type</th>
+                                                            <th className="px-4 py-2 w-[15%]">
                                                                 <div className="flex items-center gap-1">
                                                                     Semantic
                                                                     <InfoTooltip content="Inferred semantic type (e.g., Phone, Email, Currency) to help with standardization." />
                                                                 </div>
                                                             </th>
-                                                            <th className="px-4 py-2">
+                                                            <th className="px-4 py-2 w-[15%]">
                                                                 <div className="flex items-center gap-1">
                                                                     Completeness
                                                                     <InfoTooltip content="Percentage of non-null values. Red/Yellow indicates high missing data." />
                                                                 </div>
 
                                                             </th>
-                                                            <th className="px-4 py-2 rounded-tr-lg">
+                                                            <th className="px-4 py-2 rounded-tr-lg w-[15%]">
                                                                 <div className="flex items-center gap-1">
                                                                     Mapping
                                                                     <InfoTooltip content="Target field this column is mapped to for downstream processing." />
