@@ -174,12 +174,17 @@ def _detect_all_anomalies(
         # If we have any anomalies, pick a few samples and ask LLM to explain
         try:
             anomaly_samples = []
-            if "categorical" in anomalies_counts and anomalies_counts["categorical"] > 0:
-                if 'cat_anomalies' in locals() and not cat_anomalies.is_empty():
-                     anomaly_samples.extend(cat_anomalies.head(3).to_dicts())
+            for method, previews in anomalies_previews.items():
+                for p in previews[:2]:
+                    sample = p.copy()
+                    sample["_flagged_by"] = method
+                    anomaly_samples.append(sample)
+                if len(anomaly_samples) >= 5:
+                    break
+                    
             if anomaly_samples:
                 llm = LLMClient()
-                explanation = llm.explain_anomalies(dataset_name, schema, anomaly_samples)
+                explanation = llm.explain_anomalies(dataset_name, schema, anomaly_samples[:5])
                 if explanation:
                     anomaly_explanation = explanation
         except Exception as e:

@@ -17,8 +17,10 @@ import subprocess
 
 # Path setup
 TEST_DIR = Path(__file__).resolve().parent.parent
+TEST_SRC_DIR = TEST_DIR / "src"
 
-sys.path.append(str(TEST_DIR))
+sys.path.insert(0, str(TEST_DIR))
+sys.path.insert(0, str(TEST_SRC_DIR))
 from src.lakehouse_loader import list_tables, download_table, convert_dremio_to_yaml_types
 from src.storage.upload import upload_df_to_minio
 from src.connection.dremio_api import promote_to_dremio
@@ -176,6 +178,8 @@ def generate_quality_variants(
                         promo_object += ".csv"
                     elif file_format == "parquet" and not promo_object.endswith(".parquet"):
                         promo_object += ".parquet"
+                    elif file_format == "json" and not promo_object.endswith(".json"):
+                        promo_object += ".json"
                     
                     if promote_to_dremio(bucket_name, promo_object, file_format, target_schema=target_schema):
                         print(f"    ✓ Automatically ingested into Dremio")
