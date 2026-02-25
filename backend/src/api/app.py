@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+import queue
+import threading
+import json
 
 from src.api.models import RunRequest, RunAccepted, ArtifactList, ArtifactItem
 from src.api.services import (
@@ -133,6 +136,59 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
             logger.error(f"Async run failed: {e}", exc_info=True)
             mark_run_status(report_id, "error", {"error": str(e)})
         return RunAccepted(report_id=report_id, status="queued")
+
+
+@app.post("/api/v1/run_stream")
+def start_run_stream(payload: RunRequest):
+    mapping = MappingConfig(
+        reference_fields=list(payload.mapping.reference_fields),
+        synonyms=payload.mapping.synonyms,
+        threshold=payload.mapping.threshold,
+        epsilon=payload.mapping.epsilon,
+    )
+    anomaly = None
+    if payload.anomaly is not None:
+        anomaly = AnomalyConfig(
+            z_threshold=payload.anomaly.z_threshold,
+            use_iqr=payload.anomaly.use_iqr,
+            use_zscore=payload.anomaly.use_zscore,
+            use_isolation_forest=payload.anomaly.use_isolation_forest,
+            use_missing_values=payload.anomaly.use_missing_values,
+            missing_threshold=payload.anomaly.missing_threshold,
+            contamination=payload.anomaly.contamination,
+            n_estimators=payload.anomaly.n_estimators,
+            random_state=payload.anomaly.random_state,
+        )
+
+    q = queue.Queue()
+
+    def progress_callback(msg: str, pct: int):
+        q.put({"type": "progress", "message": msg, "percent": pct})
+
+    def run_worker():
+        try:
+            report = run_sync(
+                source_model=payload.source,
+                mapping=mapping,
+                anomaly=anomaly,
+                progress_callback=progress_callback
+            )
+            q.put({"type": "complete", "report": report.model_dump(mode="json")})
+        except Exception as e:
+            from src.utils.logger import logger
+            logger.error(f"Stream run failed: {e}", exc_info=True)
+            q.put({"type": "error", "message": f"Run failed: {e}"})
+
+    threading.Thread(target=run_worker, daemon=True).start()
+
+    def event_generator():
+        while True:
+            evt = q.get()
+            yield f"data: {json.dumps(evt)}\n\n"
+            if evt["type"] in ["complete", "error"]:
+                break
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.get("/api/v1/reports/{report_id}")

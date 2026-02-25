@@ -13,6 +13,8 @@ import { InfoTooltip } from './ui/InfoTooltip';
 export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report: any) => void }) {
     const [mode, setMode] = useState<'local' | 'single_table' | 'all_tables' | 'custom_query'>('local');
     const [loading, setLoading] = useState(false);
+    const [progressMsg, setProgressMsg] = useState('');
+    const [progressPct, setProgressPct] = useState(0);
     const [refFields, setRefFields] = useState('label,title,text');
     const [threshold, setThreshold] = useState(0.7);
     const [limitRows, setLimitRows] = useState(true);
@@ -89,10 +91,15 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
 
     const handleRun = async () => {
         setLoading(true);
+        setProgressMsg('Initializing backend...');
+        setProgressPct(0);
         const toastId = toast.loading('Running assistant...');
         Logger.info('Starting assistant run...', request);
         try {
-            const report = await api.runAssistant(request, 'sync');
+            const report = await api.runAssistantStream(request, (msg, pct) => {
+                setProgressMsg(msg);
+                setProgressPct(pct);
+            });
             Logger.info('Run completed successfully', report);
             onRunComplete(report);
             toast.success('Run completed successfully!', { id: toastId });
@@ -101,6 +108,8 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
             toast.error('Run failed. Check console for details.', { id: toastId });
         } finally {
             setLoading(false);
+            setProgressMsg('');
+            setProgressPct(0);
         }
     };
 
@@ -248,23 +257,27 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
                 </div>
             </CardContent>
             <CardFooter className="flex-col gap-4">
-                <Button
-                    onClick={handleRun}
-                    disabled={loading}
-                    className="w-full h-12 text-lg shadow-blue-900/20 shadow-lg"
-                >
-                    {loading ? (
-                        <>
-                            <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                            Running Analysis...
-                        </>
-                    ) : (
-                        <>
-                            <Play className="h-5 w-5 mr-2 fill-current" />
-                            Run Assistant
-                        </>
-                    )}
-                </Button>
+                {loading ? (
+                    <div className="w-full relative h-12 bg-gray-800 rounded-md overflow-hidden flex items-center justify-center border border-gray-700 shadow-inner">
+                        <div
+                            className="absolute left-0 top-0 bottom-0 bg-blue-600/30 transition-all duration-300 ease-out"
+                            style={{ width: `${progressPct}%` }}
+                        ></div>
+                        <div className="relative z-10 flex flex-col items-center justify-center">
+                            <span className="text-xs font-semibold text-blue-300">{progressPct}%</span>
+                            <span className="text-[10px] text-gray-400">{progressMsg}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <Button
+                        onClick={handleRun}
+                        disabled={loading}
+                        className="w-full h-12 text-lg shadow-blue-900/20 shadow-lg"
+                    >
+                        <Play className="h-5 w-5 mr-2 fill-current" />
+                        Run Assistant
+                    </Button>
+                )}
 
                 <div className="w-full">
                     <details className="text-xs text-gray-500 cursor-pointer group">

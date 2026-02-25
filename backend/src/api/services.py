@@ -3,7 +3,7 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Callable
 
 from src.assistant.runner import run_assistant, MappingConfig, AnomalyConfig
 from src.api.models import AssistantReport
@@ -42,6 +42,7 @@ def run_sync(
     source_model: Any,  # Union[LocalSourceModel, SQLSourceModel]
     mapping: MappingConfig,
     anomaly: Optional[AnomalyConfig],
+    progress_callback: Optional[Callable[[str, int], None]] = None,
 ) -> AssistantReport:
     if source_model.type == "local":
         source = LocalFilesDataSource(root=source_model.root, max_rows=source_model.max_rows)
@@ -64,6 +65,7 @@ def run_sync(
         mapping,
         anomaly_cfg=anomaly,
         save_dir=ARTIFACT_DIR / "anomalies",
+        progress_callback=progress_callback,
     )
 
 

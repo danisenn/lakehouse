@@ -96,6 +96,63 @@ export const api = {
         return response.data;
     },
 
+    runAssistantStream: async (
+        request: RunRequest,
+        onProgress: (msg: string, pct: number) => void
+    ): Promise<AssistantReport> => {
+        const response = await fetch(`${API_BASE_URL}/api/v1/run_stream`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`HTTP Error ${response.status}: ${errText}`);
+        }
+
+        if (!response.body) throw new Error('No response body available from server');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // SSE messages are separated by \n\n
+            const chunks = buffer.split('\n\n');
+            // Keep the last incomplete chunk in the buffer
+            buffer = chunks.pop() || '';
+
+            for (const chunk of chunks) {
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const dataStr = line.substring(6).trim();
+                        if (!dataStr) continue;
+                        try {
+                            const event = JSON.parse(dataStr);
+                            if (event.type === 'progress') {
+                                onProgress(event.message, event.percent);
+                            } else if (event.type === 'complete') {
+                                return event.report;
+                            } else if (event.type === 'error') {
+                                throw new Error(event.message);
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse SSE event:', e, 'Data:', dataStr);
+                        }
+                    }
+                }
+            }
+        }
+        throw new Error('Stream ended unexpectedly without completion');
+    },
+
     getReport: async (reportId: string): Promise<any> => {
         const response = await apiClient.get(`/api/v1/reports/${reportId}`);
         return response.data;

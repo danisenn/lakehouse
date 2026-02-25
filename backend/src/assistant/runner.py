@@ -61,7 +61,7 @@ def infer_schema(df: pl.DataFrame) -> Dict[str, str]:
     return {str(name): str(dtype) for name, dtype in df.schema.items()}
 
 
-from typing import Tuple, Any
+from typing import Tuple, Any, Callable
 
 def _detect_all_anomalies(
     dataset_name: str,
@@ -72,6 +72,7 @@ def _detect_all_anomalies(
     numeric_cols: List[str],
     save_dir: Optional[Path],
     save_samples_limit: int,
+    progress_callback: Optional[Callable[[str, int], None]] = None,
 ) -> Tuple[Dict[str, int], Dict[str, Optional[str]], Dict[str, List[int]], Dict[str, List[Dict[str, Any]]], Optional[str]]:
     # Anomaly detection
     anomalies_counts: Dict[str, int] = {}
@@ -90,6 +91,8 @@ def _detect_all_anomalies(
         return str(out)
 
     if numeric_cols:
+        if progress_callback:
+            progress_callback(f"Running Z-Score anomaly detection on {dataset_name}...", 70)
         # Per-column methods
         if anomaly_cfg.use_zscore:
             total = 0
@@ -109,6 +112,8 @@ def _detect_all_anomalies(
                     continue
             anomalies_counts["zscore"] = total
             anomalies_saved["zscore"] = None
+        if progress_callback:
+            progress_callback(f"Running IQR anomaly detection on {dataset_name}...", 75)
         if anomaly_cfg.use_iqr:
             total = 0
             for c in numeric_cols:
@@ -148,6 +153,8 @@ def _detect_all_anomalies(
                 anomalies_saved["isolation_forest"] = None
 
         # Categorical Anomalies
+        if progress_callback:
+            progress_callback(f"Running Categorical anomaly detection on {dataset_name}...", 80)
         try:
             cat_anomalies = detect_categorical_anomalies(df_anom)
             if cat_anomalies.height > 0:
@@ -198,6 +205,7 @@ def run_on_dataset(
     anomaly_cfg: AnomalyConfig,
     save_dir: Optional[Path] = None,
     save_samples_limit: int = 200,
+    progress_callback: Optional[Callable[[str, int], None]] = None,
 ) -> DatasetReport:
     df = dataset.df
     # Enhance schema recognition for non-Parquet files (CSV/JSON) or where inference failed
@@ -208,6 +216,9 @@ def run_on_dataset(
     # Create a version with row index specifically for anomaly tracking
     df_anom = df.with_row_count("row_idx")
 
+    if progress_callback:
+        progress_callback(f"Inferring schema for {dataset.name}...", 10)
+        
     # Schema
     schema = infer_schema(df)
     
@@ -230,6 +241,8 @@ def run_on_dataset(
     }
 
     # LLM Enrichment
+    if progress_callback:
+        progress_callback(f"Generating LLM insights for {dataset.name}...", 30)
     llm_insights = {"descriptions": {}, "summary": None, "anomaly_explanation": None}
     try:
         llm = LLMClient()
@@ -246,6 +259,9 @@ def run_on_dataset(
     except Exception as e:
         logger.error(f"LLM Enrichment failed: {e}")
 
+    if progress_callback:
+        progress_callback(f"Performing Semantic Mapping for {dataset.name}...", 50)
+        
     # Semantic mapping
     mapper = SemanticFieldMapper(
         reference_fields=list(mapping_cfg.reference_fields),
@@ -272,6 +288,7 @@ def run_on_dataset(
         numeric_cols=numeric_cols,
         save_dir=save_dir,
         save_samples_limit=save_samples_limit,
+        progress_callback=progress_callback,
     )
     if anomaly_explanation:
         llm_insights["anomaly_explanation"] = anomaly_explanation
@@ -302,6 +319,7 @@ def run_assistant(
     mapping_cfg: MappingConfig,
     anomaly_cfg: Optional[AnomalyConfig] = None,
     save_dir: Optional[Path] = None,
+    progress_callback: Optional[Callable[[str, int], None]] = None,
 ) -> AssistantReport:
     anomaly_cfg = anomaly_cfg or AnomalyConfig()
     datasets_reports: List[DatasetReport] = []
@@ -315,6 +333,8 @@ def run_assistant(
     all_datasets: List[Dataset] = list(source.iter_datasets())
     
     # 2. Global Schema Discovery
+    if progress_callback:
+        progress_callback("Scanning global schemas...", 5)
     # Collect all unique column names across all datasets to use as potential mapping targets
     global_columns = set()
     for ds in all_datasets:
@@ -351,7 +371,7 @@ def run_assistant(
             epsilon=mapping_cfg.epsilon
         )
         
-        report = run_on_dataset(dataset, dynamic_mapping_cfg, anomaly_cfg, ds_save_dir)
+        report = run_on_dataset(dataset, dynamic_mapping_cfg, anomaly_cfg, ds_save_dir, progress_callback=progress_callback)
         datasets_reports.append(report)
 
     root = getattr(source, "root", None)
