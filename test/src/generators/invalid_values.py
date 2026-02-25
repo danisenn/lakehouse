@@ -21,7 +21,9 @@ def add_invalid_values(df: pd.DataFrame, fraction: float) -> Tuple[pd.DataFrame,
                 df[col] = df[col].astype(object)
             df.loc[rows, col] = "INVALID"
         else:
-            df.loc[rows, col] = 999999
+            if not df[col].dtype == object:
+                df[col] = df[col].astype(object)
+            df.loc[rows, col] = "999999"
 
     metadata = {
         "invalid_values": {

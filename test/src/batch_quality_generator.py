@@ -40,7 +40,7 @@ def compute_ground_truth_types(df: pd.DataFrame) -> Dict:
         script = Path(__file__).resolve().parent / "compute_ground_truth.py"
         result = subprocess.run(
             [sys.executable, str(script), tmp.name],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=300
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
