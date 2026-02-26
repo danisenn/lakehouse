@@ -21,7 +21,8 @@ def main():
     parser = argparse.ArgumentParser(description="Run batch testing on a remote server via SSH and save results locally.")
     parser.add_argument("--host", required=True, help="SSH connection string (e.g., user@hostname)")
     parser.add_argument("--remote-dir", required=True, help="Absolute path to the lakehouse repository on the remote server (e.g., /home/user/lakehouse-service)")
-    parser.add_argument("--table", required=True, help="Table name to benchmark")
+    parser.add_argument("--table", help="Table name to benchmark")
+    parser.add_argument("--all", action="store_true", help="Process all tables in the schema")
     parser.add_argument("--schema", help="Source schema (passed to benchmark_runner.py)")
     parser.add_argument("--target-schema", help="Target schema (passed to benchmark_runner.py)")
     parser.add_argument("--limit", type=int, help="Row limit (passed to benchmark_runner.py)")
@@ -40,14 +41,21 @@ def main():
     if ssh_password:
         os.environ["SSHPASS"] = ssh_password
     
+    # Validate arguments
+    if not args.table and not args.all:
+        parser.error("Either --table or --all must be specified")
+        
     # 1. Construct the internal python command
     internal_script_path = "test/src/benchmark_runner.py"
     
     python_cmd = [
         "python",  # inside docker it's usually just python
-        internal_script_path,
-        "--table", args.table
+        internal_script_path
     ]
+    if args.table:
+        python_cmd.extend(["--table", args.table])
+    if args.all:
+        python_cmd.append("--all")
     if args.schema:
         python_cmd.extend(["--schema", args.schema])
     if args.target_schema:
@@ -60,12 +68,19 @@ def main():
     python_cmd_str = " ".join(python_cmd)
     
     # 2. Construct the full SSH command
+    env_flags = ""
+    for var in ["MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_REGION", "DREMIO_PORT", "DREMIO_USER", "DREMIO_PASSWORD"]:
+        val = os.getenv(var)
+        if val:
+            env_flags += f"-e {var}='{val}' "
+
     if args.docker_image:
         # Docker Mode
         run_cmd_str = (
             f"docker run --rm "
             f"--network host "
             f"--env-file {args.remote_dir}/.env "
+            f"{env_flags} "
             f"-e DREMIO_HOST=localhost "
             f"-v {args.remote_dir}:/app "
             f"-w /app "
@@ -105,21 +120,17 @@ def main():
         sys.exit(1)
         
     # 3. Fetch the results back
-    clean_name = args.table.replace(".csv", "").replace(".json", "").replace(".parquet", "")
-    result_filename = f"{clean_name}_benchmark_results.json"
-    
-    remote_result_path = f"{args.remote_dir}/test/data/benchmarks/{result_filename}"
-    local_results_dir = ROOT_DIR / "test" / "data" / "benchmarks"
+    remote_results_dir = f"{args.remote_dir}/test/data/benchmarks"
+    local_data_dir = ROOT_DIR / "test" / "data"
     
     # Ensure local directory exists
-    local_results_dir.mkdir(parents=True, exist_ok=True)
-    local_result_path = local_results_dir / result_filename
+    local_data_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"\n=======================================================")
     print(f" Phase 2: Copying Results Locally to Mac")
     print(f"=======================================================\n")
-    print(f"Source: {args.host}:{remote_result_path}")
-    print(f"Target: {local_result_path}\n")
+    print(f"Source: {args.host}:{remote_results_dir}")
+    print(f"Target: {local_data_dir}\n")
     
     scp_base = ["sshpass", "-e", "scp"] if ssh_password else ["scp"]
     
@@ -127,13 +138,14 @@ def main():
         scp_base.extend(["-i", args.ssh_key])
         
     scp_cmd = scp_base + [
-        f"{args.host}:{remote_result_path}",
-        str(local_result_path)
+        "-r",
+        f"{args.host}:{remote_results_dir}",
+        str(local_data_dir)
     ]
     
     try:
         subprocess.run(scp_cmd, check=True)
-        print(f"\n[SUCCESS] Results successfully saved locally to:\n -> {local_result_path}\n")
+        print(f"\n[SUCCESS] Results successfully saved locally to:\n -> {local_data_dir}/benchmarks\n")
     except subprocess.CalledProcessError as e:
         print(f"\n[ERROR] Failed to copy results from remote server.")
         sys.exit(1)

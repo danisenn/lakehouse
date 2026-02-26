@@ -34,9 +34,10 @@ def compute_ground_truth_types(df: pd.DataFrame) -> Dict:
     as a subprocess (avoids test/backend src namespace collision).
     """
     import tempfile
+    import csv
     tmp = tempfile.NamedTemporaryFile(suffix=".csv", delete=False)
     try:
-        df.to_csv(tmp.name, index=False)
+        df.to_csv(tmp.name, index=False, quoting=csv.QUOTE_NONNUMERIC, escapechar="\\")
         script = Path(__file__).resolve().parent / "compute_ground_truth.py"
         result = subprocess.run(
             [sys.executable, str(script), tmp.name],
@@ -149,13 +150,23 @@ def generate_quality_variants(
                 # (unless it matches the bucket name exactly)
                 if target_schema:
                     schema_parts = target_schema.split(".")
-                    # If the last part is the table name itself, we go one level up
-                    # but usually target_schema is like 'lakehouse.datalake.quality_variants'
-                    prefix = schema_parts[-1]
-                    if prefix == bucket_name:
-                        object_name = variant_table_name
-                    else:
-                        object_name = f"{prefix}/{variant_table_name}"
+                    try:
+                        # Find where the bucket ends and folders begin
+                        # e.g., lakehouse.datalake.raw.amazon -> bucket=datalake, folders=[raw, amazon]
+                        bucket_idx = schema_parts.index(bucket_name)
+                        folders = schema_parts[bucket_idx + 1:]
+                        prefix = "/".join(folders)
+                        if prefix:
+                            object_name = f"{prefix}/{variant_table_name}"
+                        else:
+                            object_name = variant_table_name
+                    except ValueError:
+                        # Fallback if bucket_name is not strictly in the schema
+                        prefix = schema_parts[-1]
+                        if prefix == bucket_name:
+                            object_name = variant_table_name
+                        else:
+                            object_name = f"{prefix}/{variant_table_name}"
                 else:
                     # Default
                     object_name = f"quality_variants/{variant_table_name}"

@@ -17,12 +17,12 @@ def add_invalid_values(df: pd.DataFrame, fraction: float) -> Tuple[pd.DataFrame,
 
     for col in df.columns:
         if df[col].dtype in ["float64", "int64"]:
-            if not df[col].dtype == object:
-                df[col] = df[col].astype(object)
+            if not df[col].dtype == object and not df[col].dtype == str:
+                df[col] = df[col].astype(str)
             df.loc[rows, col] = "INVALID"
         else:
-            if not df[col].dtype == object:
-                df[col] = df[col].astype(object)
+            if not df[col].dtype == object and not df[col].dtype == str:
+                df[col] = df[col].astype(str)
             df.loc[rows, col] = "999999"
 
     metadata = {

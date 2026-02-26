@@ -31,14 +31,14 @@ def main():
     
     # Read data
     if input_path.endswith(".csv"):
-        df = pl.read_csv(input_path, infer_schema_length=1000)
+        df = pl.read_csv(input_path, infer_schema_length=1000, truncate_ragged_lines=True, ignore_errors=True)
     elif input_path.endswith(".parquet"):
         df = pl.read_parquet(input_path)
     elif input_path.endswith(".json"):
         df = pl.read_json(input_path)
     else:
         # Try CSV
-        df = pl.read_csv(input_path, infer_schema_length=1000)
+        df = pl.read_csv(input_path, infer_schema_length=1000, truncate_ragged_lines=True, ignore_errors=True)
 
     # Refine types
     df = refine_types(df)

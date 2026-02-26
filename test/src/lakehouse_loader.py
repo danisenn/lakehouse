@@ -14,10 +14,21 @@ from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 
 # Add backend to path to import connection module
-backend_path = Path(__file__).resolve().parent.parent.parent / 'backend' / 'src'
-sys.path.insert(0, str(backend_path))
+try:
+    # If __file__ is available, resolve relative to it
+    backend_path = Path(__file__).resolve().parent.parent.parent / 'backend' / 'src'
+except NameError:
+    # Fallback to current working directory assumption
+    backend_path = Path.cwd() / 'backend' / 'src'
 
-from connection.connection import get_connection
+if str(backend_path) not in sys.path:
+    sys.path.insert(0, str(backend_path))
+
+try:
+    from connection.connection import get_connection
+except ModuleNotFoundError:
+    # Fallback if the path logic didn't align perfectly (e.g. docker mounts)
+    from src.connection.connection import get_connection
 import adbc_driver_flightsql.dbapi as flight_sql
 
 

@@ -281,7 +281,8 @@ def evaluate_mapping(mapping_result: Dict, ground_truth: Dict[str, Any]) -> Dict
 
 def main():
     parser = argparse.ArgumentParser(description="End-to-End Benchmarking Runner")
-    parser.add_argument("--table", required=True, help="Table name to benchmark")
+    parser.add_argument("--table", help="Table name to benchmark")
+    parser.add_argument("--all", action="store_true", help="Benchmark all tables in the schema")
     parser.add_argument("--schema", default="lakehouse.datalake.raw", help="Source schema")
     parser.add_argument("--target-schema", default="lakehouse.datalake.benchmark_test", help="Target benchmark schema")
     parser.add_argument("--limit", type=int, help="Row limit for testing")
@@ -289,7 +290,39 @@ def main():
     
     args = parser.parse_args()
     
-    clean_name = args.table.replace(".csv", "").replace(".json", "").replace(".parquet", "")
+    if not args.table and not args.all:
+        parser.error("Either --table or --all must be specified")
+        
+    if args.all:
+        print(f"\nDiscovering tables in {args.schema}...")
+        try:
+            from lakehouse_loader import list_tables
+            tables = list_tables(args.schema)
+            if not tables:
+                print(f"No tables found in {args.schema}")
+                return
+            print(f"Found {len(tables)} tables: {tables}")
+        except Exception as e:
+            print(f"Could not list tables from {args.schema}: {e}")
+            return
+    else:
+        tables = [args.table]
+
+    for table_name in tables:
+        print(f"\n{'='*80}")
+        print(f" BENCHMARKING TABLE: {table_name}")
+        print(f"{'='*80}")
+        
+        try:
+            process_table(table_name, args)
+        except Exception as e:
+            print(f"Error processing {table_name}: {e}")
+            import traceback
+            traceback.print_exc()
+
+def process_table(table_name: str, args):
+    
+    clean_name = table_name.replace(".csv", "").replace(".json", "").replace(".parquet", "")
     scenarios = ["high_quality", "medium_quality", "low_quality"]
     
     if not args.skip_generation:
@@ -298,9 +331,9 @@ def main():
         api = DremioAPI()
         if api.login():
             ext = ""
-            if args.table.endswith(".csv"): ext = ".csv"
-            elif args.table.endswith(".parquet"): ext = ".parquet"
-            elif args.table.endswith(".json"): ext = ".json"
+            if table_name.endswith(".csv"): ext = ".csv"
+            elif table_name.endswith(".parquet"): ext = ".parquet"
+            elif table_name.endswith(".json"): ext = ".json"
             
             target_schema_parts = args.target_schema.split(".")
             for scenario in scenarios:
@@ -309,7 +342,7 @@ def main():
                 api.delete_dataset(path)
 
         # 1. Generate Variants
-        if not run_generation(args.table, args.schema, args.target_schema, args.limit):
+        if not run_generation(table_name, args.schema, args.target_schema, args.limit):
             return
     else:
         print("\n--- Skipping generation (--skip-generation) ---")
@@ -321,16 +354,16 @@ def main():
     
     # Detect extension from source table
     ext = ""
-    if args.table.endswith(".csv"): ext = ".csv"
-    elif args.table.endswith(".parquet"): ext = ".parquet"
-    elif args.table.endswith(".json"): ext = ".json"
+    if table_name.endswith(".csv"): ext = ".csv"
+    elif table_name.endswith(".parquet"): ext = ".parquet"
+    elif table_name.endswith(".json"): ext = ".json"
 
     for scenario in scenarios:
         variant_table = f"{clean_name}_{scenario}{ext}"
         print(f"\nEvaluating variant: {variant_table}")
         
         # Load truth
-        truth = load_ground_truth(args.table, scenario)
+        truth = load_ground_truth(table_name, scenario)
         if not truth:
             continue
         
@@ -370,7 +403,7 @@ def main():
         
     # 3. Print Final Report
     print("\n" + "="*110)
-    print(f"BENCHMARK REPORT: {args.table}")
+    print(f"BENCHMARK REPORT: {table_name}")
     print("="*110)
     
     # Header

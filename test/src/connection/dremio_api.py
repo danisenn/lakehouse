@@ -49,6 +49,8 @@ class DremioAPI:
             response = requests.get(url, headers=self.get_headers(), timeout=10)
             if response.status_code == 200:
                 return response.json()
+            else:
+                print(f"    [Dremio API Debug] get_catalog_entry_by_path({path}) returned {response.status_code}: {response.text}")
             return None
         except Exception as e:
             print(f"Error getting catalog entry for {path}: {e}")
@@ -107,7 +109,7 @@ class DremioAPI:
             print(f"Path {path} not found. Refreshing source {path[0]}...")
             self.refresh_source(path[0])
             import time
-            time.sleep(2)
+            time.sleep(5)  # Give Dremio more time to see the new MinIO object
             entry = self.get_catalog_entry_by_path(path)
             
         if not entry:
@@ -219,24 +221,27 @@ def promote_to_dremio(bucket: str, object_path: str, format_type: str, target_sc
         return False
         
     if target_schema:
-        schema_parts = target_schema.split(".")
+        # object_path now contains the full folder structure e.g. "raw/amazon/file.csv"
+        # We just need to prepend the source name 'lakehouse' and the bucket name
         obj_parts = [p for p in object_path.split("/") if p]
         
-        # Avoid duplication: if the first obj_part matches the last schema part, skip it
-        # e.g. schema=lakehouse.datalake.benchmark_test + obj=benchmark_test/file.csv
-        #   -> should be [lakehouse, datalake, benchmark_test, file.csv]
-        if obj_parts and obj_parts[0] == schema_parts[-1]:
-            path_components = schema_parts + obj_parts[1:]
-        elif obj_parts and obj_parts[0] == bucket and bucket in schema_parts:
-            path_components = schema_parts + obj_parts[1:]
-        else:
-            path_components = schema_parts + obj_parts
+        # Determine source name from target schema (usually 'lakehouse')
+        schema_parts = target_schema.split(".")
+        source_name = schema_parts[0] if schema_parts else "lakehouse"
+        
+        path_components = [source_name, bucket] + obj_parts
     else:
         path_components = ["lakehouse", bucket] + [p for p in object_path.split("/") if p]
     
-    path_components = [p for p in path_components if p]
-    print(f"    Promotion path: {path_components}")
-    return api.promote_dataset(path_components, format_type)
+    # Clean up any potential duplicates right next to each other
+    final_path = []
+    for p in path_components:
+        if final_path and final_path[-1] == p:
+            continue
+        final_path.append(p)
+        
+    print(f"    Promotion path: {final_path}")
+    return api.promote_dataset(final_path, format_type)
 
 if __name__ == "__main__":
     api = DremioAPI()
