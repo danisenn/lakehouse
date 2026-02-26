@@ -31,13 +31,27 @@ def refine_col_type(df: pl.DataFrame, col_name: str) -> pl.Expr:
         unique_vals = set(valid_values[col_name].unique().to_list())
         lower_vals = {str(v).lower() for v in unique_vals}
         if lower_vals.issubset({"true", "false", "0", "1", "yes", "no"}):
-             # Try stricter cast?
-             # Polars cast(pl.Boolean) works for "true" (case insensitive usually?)
-             # Let's try explicit mapping or cast
+             # Polars newer versions do not support casting Utf8View to Boolean directly.
+             # We must map the strings to boolean values instead.
              try:
-                 # Check if direct cast works
-                 return expr.cast(pl.Boolean, strict=False)
-             except:
+                 bool_map = {
+                     "true": True, "false": False,
+                     "1": True, "0": False,
+                     "yes": True, "no": False,
+                     "t": True, "f": False,
+                     "y": True, "n": False
+                 }
+                 # Apply lower() and replace with boolean values
+                 # We must use strict=False to ensure unmapped values become null 
+                 # instead of throwing an error for dirty data
+                 casted = expr.str.to_lowercase().replace(bool_map, default=None)
+                 
+                 # Verify that the casted column hasn't introduced more nulls than before
+                 # valid_values was our non-null subset
+                 test_casted = valid_values.select(pl.col(col_name).str.to_lowercase().replace(bool_map, default=None))
+                 if test_casted.null_count().item() == 0:
+                     return casted
+             except Exception as e:
                  pass
 
     # Try Integer

@@ -72,6 +72,7 @@ def main():
     for var in ["MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_REGION", "DREMIO_PORT", "DREMIO_USER", "DREMIO_PASSWORD"]:
         val = os.getenv(var)
         if val:
+            val = val.strip().split("\n")[0]
             env_flags += f"-e {var}='{val}' "
 
     if args.docker_image:
