@@ -60,10 +60,11 @@ def list_tables(schema_path: str = "lakehouse.datalake.raw") -> List[str]:
     
     try:
         with _get_dbapi_connection() as conn:
-            tables_df = pl.read_database(query=query, connection=conn)
-            return tables_df["TABLE_NAME"].to_list()
+            with conn.cursor() as cursor:
+                cursor.execute(query)
+                return [row[0] for row in cursor.fetchall() if "_quality" not in row[0] and "_truth" not in row[0]]
     except Exception as e:
-        print(f"Error listing tables in schema {schema_path}: {e}")
+        print(f"[Lakehouse Loader] Error listing tables: {e}")
         return []
 
 

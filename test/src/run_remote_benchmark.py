@@ -45,6 +45,13 @@ def main():
     if not args.table and not args.all:
         parser.error("Either --table or --all must be specified")
         
+    # Auto-compute target_schema if not provided to separate variants
+    if not args.target_schema and args.schema:
+        if ".raw." in args.schema:
+            args.target_schema = args.schema.replace(".raw.", ".benchmark_test.")
+        elif args.schema.endswith(".raw"):
+            args.target_schema = args.schema.replace(".raw", ".benchmark_test")
+        
     # 1. Construct the internal python command
     internal_script_path = "test/src/benchmark_runner.py"
     
@@ -135,14 +142,18 @@ def main():
     
     scp_base = ["sshpass", "-e", "scp"] if ssh_password else ["scp"]
     
+    remote_source = f"{args.host}:{remote_results_dir}"
+    local_target = str(local_data_dir)
+
+    if ssh_password:
+        scp_cmd = ["sshpass", "-e", "scp", "-r"]
+    else:
+        scp_cmd = ["scp", "-r"]
+    
     if args.ssh_key:
-        scp_base.extend(["-i", args.ssh_key])
+        scp_cmd.extend(["-i", args.ssh_key])
         
-    scp_cmd = scp_base + [
-        "-r",
-        f"{args.host}:{remote_results_dir}",
-        str(local_data_dir)
-    ]
+    scp_cmd.extend([remote_source, local_target])
     
     try:
         subprocess.run(scp_cmd, check=True)
