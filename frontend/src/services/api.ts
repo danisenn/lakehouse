@@ -117,6 +117,9 @@ export const api = {
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
 
+        // AI-Assisted Implementation: The logic for manually reading the chunked 
+        // HTTP stream and parsing fragmented Server-Sent Events (SSE) was 
+        // generated with the help of ChatGPT/Claude to ensure robustness.
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;

@@ -43,6 +43,8 @@ export default function ReportViewer({ report }: { report: AssistantReport | nul
         acc + Object.values(ds.anomalies).reduce((a, b) => a + b, 0), 0
     );
 
+    // AI-Assisted Implementation: The CSS layout, Tailwind styling structure, and interactive 
+    // tab-based graphical components of this report viewer were generated using AI.
     return (
         <div className="space-y-6">
             {/* Summary Cards */}

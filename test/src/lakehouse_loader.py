@@ -114,8 +114,6 @@ def download_table(schema_path: str, table_name: str, limit: Optional[int] = Non
     """
     # Get schema first
     schema = get_table_schema(schema_path, table_name)
-    
-    # Build query
     if limit:
         query = f'SELECT * FROM {schema_path}."{table_name}" LIMIT {limit}'
     else:

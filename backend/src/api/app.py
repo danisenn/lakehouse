@@ -140,6 +140,9 @@ def start_run(payload: RunRequest, mode: str = Query("sync", pattern="^(sync|asy
 
 @app.post("/api/v1/run_stream")
 def start_run_stream(payload: RunRequest):
+    # AI-Assisted Implementation: The threading queues and server-sent-events (SSE) 
+    # streaming architecture below were drafted using ChatGPT to ensure non-blocking 
+    # API responses while the heavy synchronous run_sync function executes.
     mapping = MappingConfig(
         reference_fields=list(payload.mapping.reference_fields),
         synonyms=payload.mapping.synonyms,

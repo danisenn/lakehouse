@@ -113,6 +113,8 @@ export default function ConfigPanel({ onRunComplete }: { onRunComplete: (report:
         }
     };
 
+    // AI-Assisted Implementation: The graphical UI layout and Tailwind CSS styling 
+    // of this configuration panel were generated with AI assistance.
     return (
         <Card className="h-full border-gray-800 bg-gray-900/50 backdrop-blur-sm">
             <CardHeader>

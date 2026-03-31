@@ -65,6 +65,8 @@ export default function LakehouseOverview({ isOpen, onClose }: LakehouseOverview
         }
     };
 
+    // AI-Assisted Implementation: The state management logic for selectively expanding
+    // schemas and lazily fetching tables was structured using Claude 3.5 Sonnet.
     const toggleSchema = async (schemaName: string) => {
         const newExpanded = new Set(expandedSchemas);
         const isExpanding = !newExpanded.has(schemaName);
